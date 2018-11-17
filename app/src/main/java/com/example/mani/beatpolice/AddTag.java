@@ -183,7 +183,7 @@ public class AddTag extends AppCompatActivity {
         EditText et_des = findViewById(R.id.description);
         final String des      = et_des.getText().toString();
         if(des.equals("")){
-            Toast.makeText(AddTag.this, "write description", Toast.LENGTH_SHORT).show();
+            Toast.makeText(AddTag.this, "write dsfsdfdsfdsf", Toast.LENGTH_SHORT).show();
             return;
         }
 

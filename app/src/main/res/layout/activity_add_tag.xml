@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddTag">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/page_top_margin"
+        android:layout_marginLeft="@dimen/page_left_margin"
+        android:layout_margin="@dimen/page_right_margin">
+
+        <Spinner
+            android:id="@+id/spinner_title"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spinner_width"
+            android:background="@null">
+
+        </Spinner>
+
+        <LinearLayout
+            android:id="@+id/take_photo"
+            android:layout_marginTop="@dimen/margin_between_views"
+            android:layout_marginBottom="@dimen/margin_between_views"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="Take picture (optional)"
+                android:textSize="@dimen/text_size_normal" />
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="32dp"
+                android:layout_height="24dp"
+                android:src="@drawable/camera" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/text_area_height"
+            android:layout_marginTop="@dimen/margin_between_views"
+            android:background="@drawable/rectangular_background"
+            android:gravity="start"
+            android:hint="Describe the problem..."
+            android:padding="8dp"
+            android:textSize="@dimen/text_size_normal" />
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/submit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            android:layout_alignParentBottom="true"
+            style="@style/button_style_1"/>
+
+    </RelativeLayout>
+
+</FrameLayout>

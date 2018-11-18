@@ -25,6 +25,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
@@ -39,6 +40,7 @@ import java.util.List;
 
 import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.KEY_LATLNG;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 public class AddTag extends AppCompatActivity {
 
@@ -46,16 +48,12 @@ public class AddTag extends AppCompatActivity {
     private  final int CAMERA_REQUEST = 1888;
     private  final int MY_CAMERA_PERMISSION_CODE = 100;
 
-    private final String SEND_TAG_URL = BASE_URL + "add_tag_to_database.php";
-
     private LatLng mTaggedLocation;
     private Bitmap mPhotoTaken;
     private String mImagePath;
     private File file;
     private Uri fileUri;
 
-    //Temp
-    int policeId = 1235;
 
     ProgressDialog mProgressDialog;
 
@@ -186,6 +184,8 @@ public class AddTag extends AppCompatActivity {
             Toast.makeText(AddTag.this, "write dsfsdfdsfdsf", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        String policeId = new LoginSessionManager(AddTag.this).getPoliceDetailsFromPref().get(KEY_POLICE_ID);
 
         final String title = (String) spinnerTitle.getSelectedItem();
 

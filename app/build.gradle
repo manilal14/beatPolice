@@ -39,9 +39,11 @@ dependencies {
 
     implementation 'com.android.volley:volley:1.1.1'
 
-
     def uploadServiceVersion = "3.4.2"
     implementation "net.gotev:uploadservice:$uploadServiceVersion"
     implementation "net.gotev:uploadservice-okhttp:$uploadServiceVersion"
+
+    // For circular image
+    implementation 'de.hdodenhof:circleimageview:2.2.0'
 
 }

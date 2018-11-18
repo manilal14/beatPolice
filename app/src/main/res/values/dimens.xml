@@ -7,4 +7,5 @@
     <dimen name="margin_between_views">8dp</dimen>
     <dimen name="text_size_normal">14sp</dimen>
     <dimen name="text_area_height">160dp</dimen>
+    <dimen name="toolbar_height">56dp</dimen>
 </resources>

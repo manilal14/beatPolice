@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,24 +29,24 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.maps.android.PolyUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.KEY_LATLNG;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_COORD;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     private String TAG = "FragmentMap";
     private GoogleMap mMap;
     private HomePage mActivity;
-
 
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -56,13 +57,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mMyLocation;
-
-    LatLng p1 = new LatLng(10.05669880894801,76.32916152477264);
-    LatLng p2 = new LatLng(10.054208338205562,76.33883692324162);
-    LatLng p3 = new LatLng(10.046204963027062,76.33811607956886);
-    LatLng p4 = new LatLng(10.04813096763208,76.32612626999617);
-    LatLng p5 = new LatLng(10.0518568329032,76.32516670972109);
-
+    private List<LatLng> mLatLngList;
 
     public FragmentMap() {}
 
@@ -73,8 +68,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG, "Called : onCreate");
 
         mActivity = (HomePage) getActivity();
+        mActivity.getSupportActionBar().hide();
 
-
+        mLatLngList = new ArrayList<>();
+        mLatLngList = getLatLngs();
 
     }
 
@@ -85,9 +82,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG, "Called : onCreateView");
 
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
-
         getLocationPermission();
-
 
         return view;
     }
@@ -102,8 +97,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             Log.e(TAG, "mapFragment is null");
             return;
         }
-        else
+        else {
             mapFragment.getMapAsync(this);
+        }
 
     }
 
@@ -127,20 +123,17 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mMap.setMyLocationEnabled(true);
 
-//        final Circle circle = mMap.addCircle(new CircleOptions()
-//                .center(new LatLng(10.0511734,76.3327078))
-//                .radius(1000)
-//                .strokeColor(Color.RED)
-//                .fillColor(getResources().getColor(R.color.map_alloted_color)));
+        // Set uop polygon
+        final PolygonOptions polygonOption  = new PolygonOptions();
+        for(int i=0;i<mLatLngList.size();i++)
+            polygonOption.add(mLatLngList.get(i));
 
-
-        final PolygonOptions polygonOption = new PolygonOptions()
-                .add(p1,p2,p3,p4,p5)
-                .strokeColor(Color.RED)
+        polygonOption.strokeColor(Color.RED)
                 .fillColor(getResources().getColor(R.color.map_alloted_color))
                 .zIndex(5.0f);
+        mMap.addPolygon(polygonOption);
 
-        final Polygon polygon = mMap.addPolygon(polygonOption);
+
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -177,13 +170,23 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         });
 
+    }
 
+    // reurned latlngs list from shared preference
+    private List<LatLng> getLatLngs() {
 
+        LoginSessionManager session = new LoginSessionManager(mActivity);
+        HashMap<String,String> info = session.getPoliceDetailsFromPref();
 
+        String coordinates = info.get(KEY_COORD);
+        String[] s = coordinates.split(",");
 
+        List<LatLng> latLngs = new ArrayList<>();
+        for(int i=0;i<s.length;i=i+2){
+            latLngs.add( new LatLng( Double.valueOf(s[i]), Double.valueOf(s[i+1])) );
+        }
 
-
-
+        return latLngs;
     }
 
     private void getLocationPermission() {
@@ -244,7 +247,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
         }
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,

@@ -11,6 +11,6 @@ public class CommanVariablesAndFunctuions {
     public static final int NO_OF_RETRY     = 0 ;
 
 
-    public static final String BASE_URL = "http://192.168.100.104/beatPolice/";
+    public static final String BASE_URL = "http://192.168.1.11/beatPolice/";
 
 }

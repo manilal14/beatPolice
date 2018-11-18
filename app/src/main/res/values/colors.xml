@@ -7,4 +7,5 @@
     <color name="black">#000000</color>
     <color name="map_alloted_color">#80ffcc99</color>
     <color name="line_color">#eef0f0</color>
+    <color name="profile_background">#E0F8F1</color>
 </resources>

@@ -2,10 +2,12 @@
 <resources>
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorAccent">#38dfd0</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="map_alloted_color">#80ffcc99</color>
     <color name="line_color">#eef0f0</color>
     <color name="profile_background">#E0F8F1</color>
+    <color name="green">#0B6121</color>
+    <color name="red">#FF0000</color>
 </resources>

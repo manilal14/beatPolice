@@ -21,6 +21,7 @@ public class LoginSessionManager {
     public static final String KEY_PASSWORD   = "password";
     public static final String KEY_NAME       = "name";
     public static final String KEY_PHONE      = "phone";
+    public static final String KEY_PIC        = "pic";
     public static final String KEY_A_ID       = "aId";
     public static final String KEY_AREA       = "aName";
     public static final String KEY_DES        = "aDes";
@@ -32,7 +33,7 @@ public class LoginSessionManager {
         editor = pref.edit();
     }
 
-    public void createLoginSession(String policeId, String password, String name, String phone,
+    public void createLoginSession(String policeId, String password, String name, String phone, String pic,
                                    String aId, String aName, String aDes,String aCoord){
 
         editor.putBoolean(IS_LOGIN, true);
@@ -41,6 +42,9 @@ public class LoginSessionManager {
         editor.putString(KEY_PASSWORD,password);
         editor.putString(KEY_NAME,name);
         editor.putString(KEY_PHONE,phone);
+
+        editor.putString(KEY_PIC,pic);
+
         editor.putString(KEY_A_ID,aId);
         editor.putString(KEY_AREA,aName);
         editor.putString(KEY_DES,aDes);
@@ -96,9 +100,10 @@ public class LoginSessionManager {
 
         user.put(KEY_NAME, pref.getString(KEY_NAME, null));
         user.put(KEY_PHONE, pref.getString(KEY_PHONE, null));
+        user.put(KEY_PIC, pref.getString(KEY_PIC, ""));
+
         user.put(KEY_A_ID, pref.getString(KEY_A_ID, null));
         user.put(KEY_AREA, pref.getString(KEY_AREA, null));
-
         user.put(KEY_DES, pref.getString(KEY_DES, null));
         user.put(KEY_COORD, pref.getString(KEY_COORD, null));
 

@@ -118,10 +118,6 @@ public class AddTag extends AppCompatActivity {
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
                     }
-
-
-
-
                 }
             }
         });
@@ -150,13 +146,15 @@ public class AddTag extends AppCompatActivity {
             ContentResolver cr = getContentResolver();
             Bitmap bitmap;
             File actualPath;
+
             try {
                 bitmap = MediaStore.Images.Media
                         .getBitmap(cr, selectedImage);
-                actualPath = new File(path);
 
-               imageView.setImageBitmap(bitmap);
-               mImagePath = actualPath.getAbsolutePath();
+                actualPath = new File(path);
+                imageView.setImageBitmap(bitmap);
+
+                mImagePath = actualPath.getAbsolutePath();
 
                 Log.e(TAG, actualPath.toString());
 
@@ -197,7 +195,7 @@ public class AddTag extends AppCompatActivity {
         try {
 
             Toast.makeText(AddTag.this, "Started...", Toast.LENGTH_SHORT).show();
-            Log.e("asd", mImagePath);
+            Log.e(TAG, mImagePath);
             new MultipartUploadRequest(AddTag.this, uploadUrl)
 
                     .addFileToUpload(mImagePath, "image")
@@ -206,7 +204,6 @@ public class AddTag extends AppCompatActivity {
                     .addParameter("title",title)
                     .addParameter("latlng",lat+","+lon)
                     .addParameter("des",des)
-
 
                     .setNotificationConfig(new UploadNotificationConfig())
                     .setMaxRetries(10)

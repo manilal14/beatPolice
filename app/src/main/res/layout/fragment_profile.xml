@@ -8,7 +8,8 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:isScrollContainer="false">
 
         <!--Main Layout-->
         <LinearLayout
@@ -30,13 +31,14 @@
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:layout_marginTop="@dimen/margin_between_views"
-                    android:id="@+id/profile"
+                    android:id="@+id/profile_pic"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:src="@drawable/police"
                     app:civ_border_color="@color/white"
                     app:civ_border_width="2dp" />
                 <TextView
+                    android:id="@+id/edit_photo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/margin_between_views"

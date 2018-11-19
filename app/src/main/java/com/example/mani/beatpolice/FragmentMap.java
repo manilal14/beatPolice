@@ -80,7 +80,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
 
         Log.e(TAG, "Called : onCreateView");
-
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
         getLocationPermission();
 
@@ -90,9 +89,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private void initMap(){
 
         Log.e(TAG, "Called : initMap");
-
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-
         if(mapFragment == null){
             Log.e(TAG, "mapFragment is null");
             return;
@@ -107,13 +104,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap googleMap) {
 
         Log.e(TAG, "Called : onMapReady");
-
         mMap = googleMap;
-
         if (mLocationPermissionsGranted) {
-
             getDeviceLocation();
-
             if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(mActivity,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -123,7 +116,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mMap.setMyLocationEnabled(true);
 
-        // Set uop polygon
+        // Set up polygon
         final PolygonOptions polygonOption  = new PolygonOptions();
         for(int i=0;i<mLatLngList.size();i++)
             polygonOption.add(mLatLngList.get(i));
@@ -172,7 +165,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     }
 
-    // reurned latlngs list from shared preference
+    // retrned latlngs list from shared preference
     private List<LatLng> getLatLngs() {
 
         LoginSessionManager session = new LoginSessionManager(mActivity);

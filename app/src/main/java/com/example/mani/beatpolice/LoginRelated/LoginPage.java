@@ -108,13 +108,15 @@ public class LoginPage extends AppCompatActivity {
                     String name   = jsonObject.getString("p_name");
                     String phone  = jsonObject.getString("p_phone");
 
+                    String pic    = jsonObject.getString("p_pic");
+
                     String aName  = jsonObject.getString("a_name");
                     String des    = jsonObject.getString("a_des");
                     String coord  = jsonObject.getString("coord");
 
                     Log.e("response ",aId+name+phone+aName+des+coord);
 
-                    mLoginSessionManager.createLoginSession(policeId,password,name,phone,aId,aName,des,coord);
+                    mLoginSessionManager.createLoginSession(policeId,password,name,phone,pic,aId,aName,des,coord);
 
                     startActivity(new Intent(LoginPage.this,HomePage.class));
                     finish();

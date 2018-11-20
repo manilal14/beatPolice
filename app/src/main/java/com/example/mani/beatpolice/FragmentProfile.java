@@ -44,8 +44,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import static android.accounts.AccountManager.KEY_PASSWORD;
 import static android.app.Activity.RESULT_OK;
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.BASE_URL;
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.PROFILE_PIC_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.PROFILE_PIC_URL;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AREA;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_NAME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PHONE;
@@ -209,7 +209,7 @@ public class FragmentProfile extends Fragment {
 
     public void uploadMultipart() {
 
-        String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+        final String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
         String path = getRealPathFromURI(filePath);
 
         try {
@@ -230,6 +230,7 @@ public class FragmentProfile extends Fragment {
 
                         @Override
                         public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
+                            mSession.updateProfilePicName(p_id+".jpg");
                             Toast.makeText(getActivity(),"Upload complete",Toast.LENGTH_SHORT).show();
                         }
 

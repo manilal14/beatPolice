@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice;
+package com.example.mani.beatpolice.CommonPackage;
 
 import android.content.Context;
 

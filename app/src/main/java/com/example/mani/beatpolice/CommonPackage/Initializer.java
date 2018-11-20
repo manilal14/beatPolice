@@ -1,6 +1,8 @@
-package com.example.mani.beatpolice;
+package com.example.mani.beatpolice.CommonPackage;
 
 import android.app.Application;
+
+import com.example.mani.beatpolice.BuildConfig;
 
 import net.gotev.uploadservice.UploadService;
 

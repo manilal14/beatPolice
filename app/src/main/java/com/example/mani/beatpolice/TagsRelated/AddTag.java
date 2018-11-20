@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice;
+package com.example.mani.beatpolice.TagsRelated;
 
 import android.Manifest;
 import android.app.Activity;
@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.R;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
@@ -38,8 +39,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.BASE_URL;
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.KEY_LATLNG;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 public class AddTag extends AppCompatActivity {

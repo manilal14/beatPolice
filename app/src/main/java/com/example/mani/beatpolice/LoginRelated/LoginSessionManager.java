@@ -81,13 +81,9 @@ public class LoginSessionManager {
         // Staring Login Activity
         Toast.makeText(mCtx,"Logged Out",Toast.LENGTH_SHORT).show();
         mCtx.startActivity(i);
-
-
-
     }
 
     public boolean isLoggedIn(){
-
         return pref.getBoolean(IS_LOGIN, false);
     }
 
@@ -108,6 +104,13 @@ public class LoginSessionManager {
         user.put(KEY_COORD, pref.getString(KEY_COORD, null));
 
         return user;
+    }
+
+    public void updateProfilePicName(String picName){
+
+        editor.putString(KEY_PIC,picName);
+        editor.commit();
+
     }
 
 

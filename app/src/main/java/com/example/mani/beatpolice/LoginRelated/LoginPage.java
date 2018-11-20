@@ -18,7 +18,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.mani.beatpolice.HomePage;
-import com.example.mani.beatpolice.MySingleton;
+import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.R;
 
 import org.json.JSONArray;
@@ -28,9 +28,9 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.BASE_URL;
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.NO_OF_RETRY;
-import static com.example.mani.beatpolice.CommanVariablesAndFunctuions.RETRY_SECONDS;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 
 public class LoginPage extends AppCompatActivity {
 

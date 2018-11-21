@@ -50,7 +50,9 @@ public class AddTag extends AppCompatActivity {
     private  final int MY_CAMERA_PERMISSION_CODE = 100;
 
     private LatLng mTaggedLocation;
-    private Bitmap mPhotoTaken;
+    private String mDate;
+    private String mTime;
+
     private String mImagePath;
     private File file;
     private Uri fileUri;
@@ -66,6 +68,10 @@ public class AddTag extends AppCompatActivity {
         setContentView(R.layout.activity_add_tag);
 
         mTaggedLocation = (LatLng) getIntent().getExtras().get(KEY_LATLNG);
+        mDate = getIntent().getStringExtra("date");
+        mTime = getIntent().getStringExtra("time");
+
+        Log.e(TAG,mDate+" "+mTime);
 
         mProgressDialog = new ProgressDialog(AddTag.this);
         mProgressDialog.setMessage("Please Wait...");
@@ -87,6 +93,10 @@ public class AddTag extends AppCompatActivity {
         titleItems.add("Title 2");
         titleItems.add("Title 3");
         titleItems.add("Title 4");
+        titleItems.add("Title 5");
+        titleItems.add("Title 6");
+        titleItems.add("Title 7");
+        titleItems.add("Title 8");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTag.this,R.layout.spinner_layout_custom ,titleItems);
         adapter.setDropDownViewResource(android.R.layout.simple_list_item_1);
@@ -107,7 +117,6 @@ public class AddTag extends AppCompatActivity {
 
                 } else {
 
-                    //Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
 
@@ -205,6 +214,8 @@ public class AddTag extends AppCompatActivity {
                     .addParameter("title",title)
                     .addParameter("latlng",lat+","+lon)
                     .addParameter("des",des)
+                    .addParameter("t_time",mTime)
+                    .addParameter("t_date",mDate)
 
                     .setNotificationConfig(new UploadNotificationConfig())
                     .setMaxRetries(10)

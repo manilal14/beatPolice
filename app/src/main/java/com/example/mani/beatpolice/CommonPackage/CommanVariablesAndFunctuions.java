@@ -13,8 +13,10 @@ public class CommanVariablesAndFunctuions {
 
     //trogen wifi
     //public static final String BASE_URL = "http://192.168.1.11/beatPolice/";
+    //trogen
+    public static final String BASE_URL = "http://192.168.43.153/beatPolice/";
     //codebucket
-    public static final String BASE_URL        = "http://192.168.100.104/beatPolice/";
+    //public static final String BASE_URL        = "http://192.168.100.105/beatPolice/";
     public static final String PROFILE_PIC_URL = BASE_URL +"profilePic/";
 
 }

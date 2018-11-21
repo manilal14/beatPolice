@@ -54,7 +54,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +75,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private String TAG = "FragmentMap";
     private GoogleMap mMap;
     private HomePage mActivity;
+
     private final String TAG_URL = BASE_URL +"fetch_tags.php";
+    private final String ALLOTEMENT_URL = BASE_URL + "fetch_allotment_details.php";
 
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -116,7 +121,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         Log.e(TAG, "Called : onCreateView");
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
         getLocationPermission();
@@ -153,6 +157,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         mMap.setMyLocationEnabled(true);
+        fetchAllotmentDetails();
+        fetchTags();
 
         // Set up polygon
         final PolygonOptions polygonOption  = new PolygonOptions();
@@ -165,7 +171,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         mMap.addPolygon(polygonOption);
 
 
-
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(final LatLng latLng) {
@@ -174,8 +179,28 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 boolean isInside = PolyUtil.containsLocation(latLng,polygonOption.getPoints(),false);
                 if(!isInside)
                     return;
-
                 Log.e(TAG,"inside");
+
+                //Check for current date and time
+                double sTime = 1542717000;
+                double eTime = 1542729600;
+
+                long currUnixTime = System.currentTimeMillis()/1000L;
+                Log.e("asd ",currUnixTime+"");
+
+                if( ! (currUnixTime >= sTime && currUnixTime <= eTime )){
+                    Toast.makeText(getActivity(),"You don't have permisssion to tag now",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                DateFormat df = new SimpleDateFormat("dd/MM/yyyy,hh:mma");
+                String fdate = df.format(Calendar.getInstance().getTime());
+
+                String[] s = fdate.split(",");
+                final String date = s[0];
+                final String time = s[1];
+
+                Log.e(TAG,date+" "+time);
 
                 AlertDialog.Builder builder;
 
@@ -190,6 +215,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                             public void onClick(DialogInterface dialog, int which) {
                                 Intent i = new Intent(getActivity(),AddTag.class);
                                 i.putExtra(KEY_LATLNG,latLng);
+                                i.putExtra("date",date);
+                                i.putExtra("time",time);
                                 startActivity(i);
                             }
                         })
@@ -210,12 +237,21 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         HashMap<String,String> info = session.getPoliceDetailsFromPref();
 
         String coordinates = info.get(KEY_COORD);
-        String[] s = coordinates.split(",");
-
+        String[] s;
         List<LatLng> latLngs = new ArrayList<>();
-        for(int i=0;i<s.length;i=i+2){
-            latLngs.add( new LatLng( Double.valueOf(s[i]), Double.valueOf(s[i+1])) );
+
+        try {
+            s = coordinates.split(",");
+
+            for(int i=0;i<s.length;i=i+2){
+                latLngs.add( new LatLng( Double.valueOf(s[i]), Double.valueOf(s[i+1])) );
+            }
+
+        }catch (NullPointerException e){
+            Log.e(TAG,e.toString());
         }
+
+
 
         return latLngs;
     }
@@ -263,7 +299,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                             mMyLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                             //mMap.addMarker(new MarkerOptions().position(mMyLocation));
                             Log.e("TAG","Current Location : "+mMyLocation.toString());
-                            fetchTags();
+
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
 
                         } else {
@@ -406,10 +442,40 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        fetchTags();
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+//        fetchTags();
+//    }
+
+    private void fetchAllotmentDetails(){
+
+        Log.e(TAG,"called : fetchAllotmentDetails");
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, ALLOTEMENT_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e(TAG, "allotment details : "+response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.e(TAG,"onErrorResponse :"+error);
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                HashMap<String,String> params = new HashMap<>();
+
+                String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+                params.put("p_id",p_id);
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
     private Bitmap drawableToBitmap(Drawable drawable) {

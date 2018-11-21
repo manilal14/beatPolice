@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".FragmentProfile">
 
     <ScrollView
@@ -13,115 +13,130 @@
 
         <!--Main Layout-->
         <LinearLayout
-        android:id="@+id/main_edit_profile_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <FrameLayout
+            android:id="@+id/main_edit_profile_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/profile_background">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/profile_background">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/profile_pic"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="@dimen/margin_between_views"
+                        android:src="@drawable/police"
+                        app:civ_border_color="@color/white"
+                        app:civ_border_width="2dp" />
+
+                    <TextView
+                        android:id="@+id/edit_photo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/margin_between_views"
+                        android:fontFamily="@font/gotham_book_regular"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:text="@string/edit_photo" />
+                </LinearLayout>
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
+                android:layout_marginLeft="@dimen/page_left_margin"
+                android:layout_marginTop="@dimen/margin_between_views"
+                android:layout_marginRight="@dimen/page_right_margin"
                 android:orientation="vertical">
 
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:layout_marginTop="@dimen/margin_between_views"
-                    android:id="@+id/profile_pic"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:src="@drawable/police"
-                    app:civ_border_color="@color/white"
-                    app:civ_border_width="2dp" />
                 <TextView
-                    android:id="@+id/edit_photo"
-                    android:layout_width="wrap_content"
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/margin_between_views"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:fontFamily="@font/gotham_book_regular"
-                    android:text="@string/edit_photo" />
+                    android:text="Name" />
+
+                <EditText
+                    android:id="@+id/name"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:text="MANILAL KASERA" />
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Password" />
+
+
+                <EditText
+                    android:id="@+id/password"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:inputType="textPassword"
+                    android:longClickable="false"
+                    android:text="12345678910" />
+
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Alloted area" />
+
+                <EditText
+                    android:id="@+id/area"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:text="School of Engineering" />
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Alloted Time" />
+
+                <EditText
+                    android:id="@+id/a_time"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:inputType="number" />
+
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Phone" />
+
+                <EditText
+                    android:id="@+id/phone"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="false"
+                    android:inputType="number" />
+
             </LinearLayout>
-        </FrameLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="@dimen/page_left_margin"
-            android:layout_marginRight="@dimen/page_right_margin"
-            android:layout_marginTop="@dimen/margin_between_views"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Name"
-                style="@style/text_1"/>
-
-            <EditText
-                android:id="@+id/name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:text="MANILAL KASERA"
-                style="@style/edit_text_1"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Password"
-                style="@style/text_1"/>
-
-
-            <EditText
-                android:id="@+id/password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="false"
-                android:inputType="textPassword"
-                android:longClickable="false"
-                android:text="12345678910"
-                style="@style/edit_text_1"/>
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Alloted area"
-                style="@style/text_1"/>
-
-            <EditText
-                android:id="@+id/area"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:text="School of Engineering"
-                style="@style/edit_text_1"/>
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Phone"
-                style="@style/text_1"/>
-
-            <EditText
-                android:id="@+id/phone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:enabled="false"
-                style="@style/edit_text_1"/>
 
         </LinearLayout>
-
-    </LinearLayout>
 
     </ScrollView>
 

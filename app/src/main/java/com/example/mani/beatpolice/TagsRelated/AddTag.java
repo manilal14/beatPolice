@@ -41,6 +41,7 @@ import java.util.List;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 public class AddTag extends AppCompatActivity {
@@ -58,7 +59,8 @@ public class AddTag extends AppCompatActivity {
     private Uri fileUri;
 
 
-    ProgressDialog mProgressDialog;
+    private ProgressDialog mProgressDialog;
+    private LoginSessionManager mSession;
 
 
 
@@ -75,6 +77,8 @@ public class AddTag extends AppCompatActivity {
 
         mProgressDialog = new ProgressDialog(AddTag.this);
         mProgressDialog.setMessage("Please Wait...");
+
+        mSession = new LoginSessionManager(AddTag.this);
 
 
         clickListener();
@@ -193,7 +197,8 @@ public class AddTag extends AppCompatActivity {
             return;
         }
 
-        String policeId = new LoginSessionManager(AddTag.this).getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+        String policeId = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+        String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
 
         final String title = (String) spinnerTitle.getSelectedItem();
 
@@ -210,6 +215,7 @@ public class AddTag extends AppCompatActivity {
 
                     .addFileToUpload(mImagePath, "image")
 
+                    .addParameter("a_id",String.valueOf(aId))
                     .addParameter("p_id",String.valueOf(policeId))
                     .addParameter("title",title)
                     .addParameter("latlng",lat+","+lon)

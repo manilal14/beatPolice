@@ -66,6 +66,8 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_COORD;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
@@ -88,9 +90,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mMyLocation;
-    private List<LatLng> mLatLngList;
-    private List<Tag> mTagList;
-
     private LoginSessionManager mSession;
 
 
@@ -109,12 +108,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         Log.e(TAG, "Called : onCreate");
         mActivity.getSupportActionBar().hide();
-
-        mLatLngList = new ArrayList<>();
-        mLatLngList = getLatLngs();
-
-        mTagList = new ArrayList<>();
         mSession = new LoginSessionManager(getActivity());
+
+        fetchAllotmentDetails();
 
     }
 
@@ -123,6 +119,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
         Log.e(TAG, "Called : onCreateView");
         View view =  inflater.inflate(R.layout.fragment_map, container, false);
+
         getLocationPermission();
 
         return view;
@@ -157,19 +154,34 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         mMap.setMyLocationEnabled(true);
-        fetchAllotmentDetails();
-        fetchTags();
 
         // Set up polygon
         final PolygonOptions polygonOption  = new PolygonOptions();
-        for(int i=0;i<mLatLngList.size();i++)
-            polygonOption.add(mLatLngList.get(i));
+        String coord = mSession.getAllotmentDetails().get(KEY_COORD);
+        String s[];
+        List<LatLng> latlnglist = new ArrayList<>();
 
-        polygonOption.strokeColor(Color.RED)
-                .fillColor(getResources().getColor(R.color.map_alloted_color))
-                .zIndex(5.0f);
-        mMap.addPolygon(polygonOption);
+        try {
 
+            s = coord.split(",");
+            for(int i=0;i<s.length;i=i+2){
+                LatLng latLng = new LatLng(Double.valueOf(s[i]),Double.valueOf(s[i+1]));
+                latlnglist.add(latLng);
+            }
+
+            for(int i=0;i<latlnglist.size();i++)
+                polygonOption.add(latlnglist.get(i));
+
+            polygonOption.strokeColor(Color.RED)
+                    .fillColor(getResources().getColor(R.color.map_alloted_color))
+                    .zIndex(5.0f);
+            mMap.addPolygon(polygonOption);
+
+        } catch (Exception e){
+            Log.e(TAG,"Exception cought 1");
+        }
+
+        fetchTagsFromDatabase();
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -181,9 +193,19 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     return;
                 Log.e(TAG,"inside");
 
-                //Check for current date and time
-                double sTime = 1542717000;
-                double eTime = 1542729600;
+                String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
+                String[] s2;
+                double sTime = 0;
+                double eTime = 0;
+
+                try {
+                    s2 = aTime.split(",");
+                    sTime = Double.valueOf(s2[0]);
+                    eTime = Double.valueOf(s2[1]);
+
+                }catch (Exception e){
+                    Log.e(TAG,"Exception cought 2");
+                }
 
                 long currUnixTime = System.currentTimeMillis()/1000L;
                 Log.e("asd ",currUnixTime+"");
@@ -228,32 +250,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         });
 
-    }
-
-    // return latlngs list from shared preference
-    private List<LatLng> getLatLngs() {
-
-        LoginSessionManager session = new LoginSessionManager(mActivity);
-        HashMap<String,String> info = session.getPoliceDetailsFromPref();
-
-        String coordinates = info.get(KEY_COORD);
-        String[] s;
-        List<LatLng> latLngs = new ArrayList<>();
-
-        try {
-            s = coordinates.split(",");
-
-            for(int i=0;i<s.length;i=i+2){
-                latLngs.add( new LatLng( Double.valueOf(s[i]), Double.valueOf(s[i+1])) );
-            }
-
-        }catch (NullPointerException e){
-            Log.e(TAG,e.toString());
-        }
-
-
-
-        return latLngs;
     }
 
     private void getLocationPermission() {
@@ -343,7 +339,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    private void fetchTags(){
+    private void fetchTagsFromDatabase(){
 
         Log.e(TAG,"called : fetchTags");
 
@@ -351,8 +347,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             public void onResponse(String response) {
 
-                if(mTagList!=null)
-                    mTagList.clear();
+                List<Tag> tagList = new ArrayList<>();
 
                 Log.e(TAG,"fetchTags : on Response "+response);
 
@@ -381,10 +376,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         String des = jsonObject.getString("t_des");
                         int status = Integer.parseInt(jsonObject.getString("t_status"));
 
-                        mTagList.add(new Tag(id,title,des,coord,imageName,status));
+                        tagList.add(new Tag(id,title,des,coord,imageName,status));
                     }
 
-                    addTagsToMap();
+                    addTagsToMap(tagList);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -396,7 +391,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG,error.toString());
-
             }
         }){
 
@@ -404,8 +398,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String, String> params = new HashMap<>();
 
-                String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
-                params.put("p_id",p_id);
+                String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
+                params.put("a_id",aId);
                 return params;
             }
         };
@@ -414,39 +408,43 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
-    private void addTagsToMap(){
+    private void addTagsToMap(List<Tag> tagList){
 
-        Log.e(TAG,mTagList.size()+"");
+        for(int i=0;i<tagList.size();i++){
 
-        for(int i=0;i<mTagList.size();i++){
+            Tag tagDetails = tagList.get(i);
 
-            Tag tag = mTagList.get(i);
+            String coord = tagDetails.getCoord();
+            String[] s;
+            try {
+                s = coord.split(",");
+                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
+                Log.e(TAG,latLng.toString());
 
-            String coord = mTagList.get(i).getCoord();
-            String[] s = coord.split(",");
+                Drawable drawable =  getResources().getDrawable(R.drawable.marker_red);
+                if(tagDetails.getStatus() == 1 )
+                    drawable = getResources().getDrawable(R.drawable.marker_ok);
 
-            LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
-            Log.e(TAG,latLng.toString());
+                Bitmap bitmap = drawableToBitmap(drawable);
 
-            Drawable drawable =  getResources().getDrawable(R.drawable.marker_red);
-            if(tag.getStatus() ==1 )
-                drawable = getResources().getDrawable(R.drawable.marker_ok);
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(latLng)
+                        .title(tagDetails.getTitle())
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                mMap.addMarker(markerOptions);
 
-            Bitmap bitmap = drawableToBitmap(drawable);
 
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .position(latLng)
-                    .title(tag.getTitle())
-                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
-            mMap.addMarker(markerOptions);
+            }catch (Exception e) {
+                Log.e(TAG,"Exception cought 3");
+            }
         }
     }
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        fetchTags();
-//    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchTagsFromDatabase();
+    }
 
     private void fetchAllotmentDetails(){
 
@@ -456,12 +454,44 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             public void onResponse(String response) {
                 Log.e(TAG, "allotment details : "+response);
+
+                try {
+
+                    JSONArray jsonArray = new JSONArray(response);
+                    JSONObject res = jsonArray.getJSONObject(0);
+
+                    int     rc  = res.getInt("response_code");
+                    String mess = res.getString("message");
+
+                    if(rc <= 0){
+                        Log.e(TAG,"fetchAllotmentDetails : "+mess);
+                        return;
+                    }
+                    //Pick the last alloted area (more than one alloted area may be there)
+                    JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
+
+                    String a_id    = jsonObject.getString("a_id");
+                    String a_time  = jsonObject.getString("a_time");
+                    String a_name  = jsonObject.getString("a_name");
+                    String a_des   = jsonObject.getString("des");
+                    String a_coord = jsonObject.getString("coord");
+
+                    mSession.saveAllotmentDetails(a_id,a_time,a_name,a_des,a_coord);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG,"fetchAllotement : exception cought");
+                }
+
+
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
 
                 Log.e(TAG,"onErrorResponse :"+error);
+
+
             }
         }){
             @Override

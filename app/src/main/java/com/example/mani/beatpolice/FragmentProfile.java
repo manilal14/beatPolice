@@ -37,6 +37,8 @@ import net.gotev.uploadservice.UploadNotificationConfig;
 import net.gotev.uploadservice.UploadStatusDelegate;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -47,6 +49,7 @@ import static android.app.Activity.RESULT_OK;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.PROFILE_PIC_URL;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AREA;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_NAME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PHONE;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PIC;
@@ -106,13 +109,48 @@ public class FragmentProfile extends Fragment {
         EditText et_name       = mRootView.findViewById(R.id.name);
         final EditText et_pass = mRootView.findViewById(R.id.password);
         EditText et_area       = mRootView.findViewById(R.id.area);
+        EditText et_time       = mRootView.findViewById(R.id.a_time);
         EditText et_phone      = mRootView.findViewById(R.id.phone);
 
-        HashMap<String, String> info = mSession.getPoliceDetailsFromPref();
 
+        HashMap<String, String> info = mSession.getPoliceDetailsFromPref();
         et_name.setText(info.get(KEY_NAME));
-        et_area.setText(info.get(KEY_AREA));
         et_phone.setText(info.get(KEY_PHONE));
+
+        String aArea = mSession.getAllotmentDetails().get(KEY_AREA);
+        if(aArea.equals(""))
+            et_area.setText("Not Alloted");
+        else
+            et_area.setText(aArea);
+
+
+        String aTime = "Not Alloted";
+
+        String a_time =  mSession.getAllotmentDetails().get(KEY_A_TIME);
+        if(a_time.contains(",")){
+            try{
+
+                String[] s = a_time.split(",");
+                long sUnix = Long.valueOf(s[0]);
+                long eUnix = Long.valueOf(s[1]);
+
+                SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy, hh:mm a");
+                Date   sTime = new java.util.Date(sUnix*1000L);
+                String sfd   = sdf.format(sTime);
+
+                sdf = new java.text.SimpleDateFormat("hh:mm a");
+                Date eTime = new java.util.Date(eUnix*1000L);
+
+                String efd = sdf.format(eTime);
+                aTime = sfd + " - "+ efd;
+            }catch (Exception e){
+                Log.e(TAG,"Exception cought 1");
+            }
+
+
+        }
+
+        et_time.setText(aTime);
 
         String picName = info.get(KEY_PIC);
         if(picName.equals(""))
@@ -266,7 +304,6 @@ public class FragmentProfile extends Fragment {
             return;
         }
         if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) { }
-        //And finally ask for the permission
         ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, GALLARY_REQUEST);
     }
 

@@ -35,7 +35,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 public class LoginPage extends AppCompatActivity {
 
     private final String TAG = this.getClass().getSimpleName();
-    private LoginSessionManager mLoginSessionManager;
+    private LoginSessionManager mSession;
 
     private ProgressDialog mProgressDialog;
 
@@ -51,7 +51,7 @@ public class LoginPage extends AppCompatActivity {
         mProgressDialog = new ProgressDialog(LoginPage.this);
         mProgressDialog.setMessage("Please wait");
 
-        mLoginSessionManager = new LoginSessionManager(LoginPage.this);
+        mSession = new LoginSessionManager(LoginPage.this);
 
         TextView login = findViewById(R.id.login);
         login.setOnClickListener(new View.OnClickListener() {
@@ -60,9 +60,6 @@ public class LoginPage extends AppCompatActivity {
                 verifyCredentails();
             }
         });
-
-
-
     }
 
     private void verifyCredentails() {
@@ -104,19 +101,11 @@ public class LoginPage extends AppCompatActivity {
                         return;
                     }
 
-                    String aId    = jsonObject.getString("a_id");
                     String name   = jsonObject.getString("p_name");
                     String phone  = jsonObject.getString("p_phone");
-
                     String pic    = jsonObject.getString("p_pic");
 
-                    String aName  = jsonObject.getString("a_name");
-                    String des    = jsonObject.getString("a_des");
-                    String coord  = jsonObject.getString("coord");
-
-                    Log.e("response ",aId+name+phone+aName+des+coord);
-
-                    mLoginSessionManager.createLoginSession(policeId,password,name,phone,pic,aId,aName,des,coord);
+                    mSession.createLoginSession(policeId,password,name,phone,pic);
 
                     startActivity(new Intent(LoginPage.this,HomePage.class));
                     finish();
@@ -124,6 +113,7 @@ public class LoginPage extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    Log.e(TAG,"verifyCredentials : Exception cought  " + e );
                 }
 
 

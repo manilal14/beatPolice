@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,8 +16,8 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.mani.beatpolice.HomePage;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
+import com.example.mani.beatpolice.HomePage;
 import com.example.mani.beatpolice.R;
 
 import org.json.JSONArray;
@@ -65,7 +64,7 @@ public class LoginPage extends AppCompatActivity {
     private void verifyCredentails() {
 
         Log.e(TAG, "called : verifyCredentials");
-        AutoCompleteTextView et_policeId = findViewById(R.id.police_id);
+        EditText et_policeId = findViewById(R.id.police_id);
         final EditText et_password = findViewById(R.id.password);
 
         final String policeId = et_policeId.getText().toString();

@@ -2,9 +2,7 @@ package com.example.mani.beatpolice;
 
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -13,10 +11,11 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -79,6 +78,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private String TAG = "FragmentMap";
     private GoogleMap mMap;
     private HomePage mActivity;
+    private View mRootView;
 
     private final String TAG_URL = BASE_URL +"fetch_tags.php";
     private final String ALLOTEMENT_URL = BASE_URL + "fetch_allotment_details.php";
@@ -98,6 +98,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private List<Tag> mTagList;
 
     private boolean shouldExecuteOnResume;
+
+    private PolygonOptions mPolygonOption;
+    private  Marker mToAdd;
+
 
 
 
@@ -129,11 +133,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.e(TAG, "Called : onCreateView");
-        View view =  inflater.inflate(R.layout.fragment_map, container, false);
+        mRootView =  inflater.inflate(R.layout.fragment_map, container, false);
 
         getLocationPermission();
 
-        return view;
+        return mRootView;
     }
 
     private void initMap(){
@@ -165,6 +169,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMapToolbarEnabled(false);
 
         if(!mSession.isAlloted()) {
             Log.e(TAG,"Beat area is not allocated");
@@ -173,10 +178,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         Log.e(TAG,"Beat area is allocated");
 
-
-
         // Set up polygon
-        final PolygonOptions polygonOption  = new PolygonOptions();
+        mPolygonOption  = new PolygonOptions();
         String coord = mSession.getAllotmentDetails().get(KEY_COORD);
 
         if(!coord.equals("")) {
@@ -193,12 +196,12 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 }
 
                 for (int i = 0; i < latlnglist.size(); i++)
-                    polygonOption.add(latlnglist.get(i));
+                    mPolygonOption.add(latlnglist.get(i));
 
-                polygonOption.strokeColor(Color.RED)
+                mPolygonOption.strokeColor(Color.RED)
                         .fillColor(getResources().getColor(R.color.map_alloted_color))
                         .zIndex(5.0f);
-                mMap.addPolygon(polygonOption);
+                mMap.addPolygon(mPolygonOption);
 
             } catch (Exception e) {
                 Log.e(TAG, "Exception cought 1 : " + e);
@@ -206,83 +209,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         fetchTagsFromDatabase();
-
-
-
-
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(final LatLng latLng) {
-
-                Log.e(TAG,"Map is clicked");
-                boolean isInside = PolyUtil.containsLocation(latLng,polygonOption.getPoints(),false);
-                if(!isInside)
-                    return;
-                Log.e(TAG,"inside");
-
-                String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
-                Log.e("asd1 ",aTime);
-
-                String[] s2;
-                long sTime = 0;
-                long eTime = 0;
-
-                try {
-                    s2 = aTime.split(",");
-
-                    Log.e("asd1 ",s2[0]+" "+s2[1]);
-
-                    sTime = Long.valueOf(s2[0]);
-                    eTime = Long.valueOf(s2[1]);
-
-                }catch (Exception e){
-                    Log.e(TAG,"Exception cought 2");
-                }
-
-                Log.e("asd2"," "+sTime +" ," +eTime);
-                long currUnixTime = System.currentTimeMillis()/1000L;
-                Log.e("asd3",currUnixTime+"");
-
-                if( ! (currUnixTime >= sTime && currUnixTime <= eTime )){
-                    Toast.makeText(getActivity(),"You don't have permisssion to tag now",Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                DateFormat df = new SimpleDateFormat("dd/MM/yyyy,hh:mma");
-                String fdate = df.format(Calendar.getInstance().getTime());
-
-                String[] s = fdate.split(",");
-                final String date = s[0];
-                final String time = s[1];
-
-                Log.e(TAG,date+" "+time);
-
-                AlertDialog.Builder builder;
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    builder = new AlertDialog.Builder(getActivity(), android.R.style.Theme_Material_Dialog_Alert);
-                } else {
-                    builder = new AlertDialog.Builder(getActivity());
-                }
-
-                builder.setTitle("Want to tag this place?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent i = new Intent(getActivity(),AddTag.class);
-                                i.putExtra(KEY_LATLNG,latLng);
-                                i.putExtra("date",date);
-                                i.putExtra("time",time);
-                                startActivity(i);
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) { }
-                        })
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
-            }
-        });
-
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
@@ -310,10 +236,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     }
                 }
                 if(tagIndexClicked == -1){
-                    Log.e("qwe","No result");
+                    Log.e(TAG,"Marker to be add is clicked");
+                    showSnackBar(marker.getPosition());
                     return false;
                 }
-                Log.e("qwe",""+mTagList.get(tagIndexClicked).getDes());
+                Log.e(TAG,""+mTagList.get(tagIndexClicked).getDes());
 
                 Intent i  = new Intent(getActivity(),TagInfo.class);
                 i.putExtra("tagInfo",mTagList.get(tagIndexClicked));
@@ -324,8 +251,34 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         });
 
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                LatLng latLng = mMap.getCameraPosition().target;
+
+                boolean isInside = PolyUtil.containsLocation(latLng,mPolygonOption.getPoints(),false);
+
+                if(!isInside){
+                    Log.e(TAG,"outside alloted area");
+                    return;
+                }
+
+                Log.e(TAG,"inside");
+
+                boolean isTimeAlloted = checkAllotmentTime();
+                if(!isTimeAlloted) {
+                    Toast.makeText(getActivity(), "You don't have permisssion to tag now", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                showSnackBar(latLng);
+            }
+        });
+
 
     }
+
+
 
 
     private void fetchTagsFromDatabase(){
@@ -569,6 +522,40 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    private boolean checkAllotmentTime() {
+
+        String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
+        Log.e("asd1 ",aTime);
+
+        String[] s2;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s2 = aTime.split(",");
+
+            Log.e(TAG,s2[0]+" "+s2[1]);
+
+            sTime = Long.valueOf(s2[0]);
+            eTime = Long.valueOf(s2[1]);
+
+        }catch (Exception e){
+            Log.e(TAG,"Exception cought 2");
+        }
+
+        Log.e(TAG," "+sTime +" ," +eTime);
+
+        long currUnixTime = System.currentTimeMillis()/1000L;
+        Log.e(TAG,currUnixTime+"");
+
+        if( ! (currUnixTime >= sTime && currUnixTime <= eTime ))
+            return false;
+
+
+        return true;
+
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -619,4 +606,37 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         drawable.draw(canvas);
         return bitmap;
     }
+
+    private void showSnackBar(final LatLng latLng){
+
+        CoordinatorLayout coordinatorLayout = mRootView.findViewById(R.id.coordinate_layout);
+        Snackbar snackbar = Snackbar
+                .make(coordinatorLayout, "Tag this place ?", Snackbar.LENGTH_SHORT)
+
+                .setAction("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        getDeviceLocation();
+
+                        DateFormat df = new SimpleDateFormat("dd/MM/yyyy,hh:mma");
+                        String fdate = df.format(Calendar.getInstance().getTime());
+
+                        String[] s = fdate.split(",");
+                        final String date = s[0];
+                        final String time = s[1];
+
+                        Log.e(TAG,date+" "+time);
+
+                        Intent i = new Intent(getActivity(),AddTag.class);
+                        i.putExtra(KEY_LATLNG,latLng);
+                        i.putExtra("date",date);
+                        i.putExtra("time",time);
+                        startActivity(i);
+                    }
+                });
+        snackbar.show();
+
+    }
+
 }

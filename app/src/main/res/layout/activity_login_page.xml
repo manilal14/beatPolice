@@ -7,57 +7,6 @@
     android:background="@drawable/login_backgroungd"
     tools:context=".LoginRelated.LoginPage">
 
-    <!--<LinearLayout-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:orientation="vertical"-->
-    <!--android:layout_gravity="center"-->
-    <!--android:layout_marginLeft="@dimen/page_left_margin"-->
-    <!--android:layout_marginRight="@dimen/page_left_margin">-->
-
-
-    <!--<android.support.design.widget.TextInputLayout-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_marginTop="@dimen/margin_between_views"-->
-    <!--android:layout_marginBottom="@dimen/margin_between_views">-->
-
-    <!--<AutoCompleteTextView-->
-    <!--android:id="@+id/police_id"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:hint="userId"-->
-    <!--android:inputType="textEmailAddress|textAutoComplete|textFilter" />-->
-
-    <!--</android.support.design.widget.TextInputLayout>-->
-
-    <!--<android.support.design.widget.TextInputLayout-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_marginTop="@dimen/margin_between_views"-->
-    <!--android:layout_marginBottom="@dimen/margin_between_views">-->
-
-
-    <!--<EditText-->
-    <!--android:id="@+id/password"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:hint="Password"-->
-    <!--android:inputType="textPassword"/>-->
-
-    <!--</android.support.design.widget.TextInputLayout>-->
-
-    <!--<TextView-->
-    <!--android:id="@+id/login"-->
-    <!--android:layout_width="fill_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_marginTop="24dp"-->
-    <!--android:gravity="center"-->
-    <!--android:text="Login"-->
-    <!--style="@style/button_style_1"/>-->
-
-
-    <!--</LinearLayout>-->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -109,7 +58,7 @@
                 android:paddingRight="24dp"
                 android:paddingBottom="32dp">
 
-                <AutoCompleteTextView
+                <EditText
                     android:id="@+id/police_id"
                     style="@style/edit_text_1"
                     android:layout_width="match_parent"

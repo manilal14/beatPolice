@@ -100,24 +100,29 @@ public class FragmentProfile extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Log.e(TAG, "called : onCreateView");
+        Log.e(TAG, "called : onCreateew");
         mRootView = inflater.inflate(R.layout.fragment_profile, container, false);
 
+
+
         CircleImageView profile = mRootView.findViewById(R.id.profile_pic);
+
 
         TextView tv_editPhoto  = mRootView.findViewById(R.id.edit_photo);
         EditText et_name       = mRootView.findViewById(R.id.name);
         final EditText et_pass = mRootView.findViewById(R.id.password);
-        EditText et_area       = mRootView.findViewById(R.id.area);
-        EditText et_time       = mRootView.findViewById(R.id.a_time);
+        TextView et_area       = mRootView.findViewById(R.id.area);
+        TextView et_time       = mRootView.findViewById(R.id.a_time);
         EditText et_phone      = mRootView.findViewById(R.id.phone);
-
 
         HashMap<String, String> info = mSession.getPoliceDetailsFromPref();
         et_name.setText(info.get(KEY_NAME));
         et_phone.setText(info.get(KEY_PHONE));
 
         String aArea = mSession.getAllotmentDetails().get(KEY_AREA);
+
+        Log.e(TAG,"aArea - "+aArea);
+
         if(aArea.equals(""))
             et_area.setText("Not Alloted");
         else
@@ -127,6 +132,9 @@ public class FragmentProfile extends Fragment {
         String aTime = "Not Alloted";
 
         String a_time =  mSession.getAllotmentDetails().get(KEY_A_TIME);
+
+        Log.e(TAG," a_time - "+a_time);
+
         if(a_time.contains(",")){
             try{
 
@@ -144,10 +152,8 @@ public class FragmentProfile extends Fragment {
                 String efd = sdf.format(eTime);
                 aTime = sfd + " - "+ efd;
             }catch (Exception e){
-                Log.e(TAG,"Exception cought 1");
+                Log.e(TAG,"Exception cought 1 " +e);
             }
-
-
         }
 
         et_time.setText(aTime);
@@ -182,10 +188,6 @@ public class FragmentProfile extends Fragment {
                     Toast.makeText(getActivity(),"Permission not granted",Toast.LENGTH_SHORT).show();
                     requestStoragePermission();
                 }
-
-
-
-
             }
         });
         et_pass.setOnClickListener(new View.OnClickListener() {
@@ -306,8 +308,6 @@ public class FragmentProfile extends Fragment {
         if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) { }
         ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, GALLARY_REQUEST);
     }
-
-
 
     public void resetPassword(final EditText et_pass) {
 

@@ -1,6 +1,8 @@
 package com.example.mani.beatpolice.TagsRelated;
 
-public class Tag {
+import java.io.Serializable;
+
+public class Tag implements Serializable {
 
     private int id;
     private String title;

@@ -36,6 +36,7 @@ import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.TagsRelated.AddTag;
 import com.example.mani.beatpolice.TagsRelated.Tag;
+import com.example.mani.beatpolice.TagsRelated.TagInfo;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -44,6 +45,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -86,11 +88,16 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
 
     private static final float GPS_ZOOM =18f;
+    private static final float DEFAULT_ZOOM = 22f;
     private Boolean mLocationPermissionsGranted = false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mMyLocation;
     private LoginSessionManager mSession;
+
+    private List<Tag> mTagList;
+
+    private boolean shouldExecuteOnResume;
 
 
 
@@ -106,9 +113,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        shouldExecuteOnResume = false;
+
         Log.e(TAG, "Called : onCreate");
         mActivity.getSupportActionBar().hide();
         mSession = new LoginSessionManager(getActivity());
+
+        mTagList = new ArrayList<>();
 
         fetchAllotmentDetails();
 
@@ -155,33 +166,49 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mMap.setMyLocationEnabled(true);
 
+        if(!mSession.isAlloted()) {
+            Log.e(TAG,"Beat area is not allocated");
+            return;
+        }
+
+        Log.e(TAG,"Beat area is allocated");
+
+
+
         // Set up polygon
         final PolygonOptions polygonOption  = new PolygonOptions();
         String coord = mSession.getAllotmentDetails().get(KEY_COORD);
-        String s[];
-        List<LatLng> latlnglist = new ArrayList<>();
 
-        try {
+        if(!coord.equals("")) {
 
-            s = coord.split(",");
-            for(int i=0;i<s.length;i=i+2){
-                LatLng latLng = new LatLng(Double.valueOf(s[i]),Double.valueOf(s[i+1]));
-                latlnglist.add(latLng);
+            String s[];
+            List<LatLng> latlnglist = new ArrayList<>();
+
+            try {
+
+                s = coord.split(",");
+                for (int i = 0; i < s.length; i = i + 2) {
+                    LatLng latLng = new LatLng(Double.valueOf(s[i]), Double.valueOf(s[i + 1]));
+                    latlnglist.add(latLng);
+                }
+
+                for (int i = 0; i < latlnglist.size(); i++)
+                    polygonOption.add(latlnglist.get(i));
+
+                polygonOption.strokeColor(Color.RED)
+                        .fillColor(getResources().getColor(R.color.map_alloted_color))
+                        .zIndex(5.0f);
+                mMap.addPolygon(polygonOption);
+
+            } catch (Exception e) {
+                Log.e(TAG, "Exception cought 1 : " + e);
             }
-
-            for(int i=0;i<latlnglist.size();i++)
-                polygonOption.add(latlnglist.get(i));
-
-            polygonOption.strokeColor(Color.RED)
-                    .fillColor(getResources().getColor(R.color.map_alloted_color))
-                    .zIndex(5.0f);
-            mMap.addPolygon(polygonOption);
-
-        } catch (Exception e){
-            Log.e(TAG,"Exception cought 1");
         }
 
         fetchTagsFromDatabase();
+
+
+
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -194,21 +221,27 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 Log.e(TAG,"inside");
 
                 String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
+                Log.e("asd1 ",aTime);
+
                 String[] s2;
-                double sTime = 0;
-                double eTime = 0;
+                long sTime = 0;
+                long eTime = 0;
 
                 try {
                     s2 = aTime.split(",");
-                    sTime = Double.valueOf(s2[0]);
-                    eTime = Double.valueOf(s2[1]);
+
+                    Log.e("asd1 ",s2[0]+" "+s2[1]);
+
+                    sTime = Long.valueOf(s2[0]);
+                    eTime = Long.valueOf(s2[1]);
 
                 }catch (Exception e){
                     Log.e(TAG,"Exception cought 2");
                 }
 
+                Log.e("asd2"," "+sTime +" ," +eTime);
                 long currUnixTime = System.currentTimeMillis()/1000L;
-                Log.e("asd ",currUnixTime+"");
+                Log.e("asd3",currUnixTime+"");
 
                 if( ! (currUnixTime >= sTime && currUnixTime <= eTime )){
                     Toast.makeText(getActivity(),"You don't have permisssion to tag now",Toast.LENGTH_SHORT).show();
@@ -250,7 +283,233 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         });
 
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                /*
+                    Get Latlng of marker clicked and convert it to string.
+                    Match the string with latlng fetched.
+                    Get the index of List.
+                 */
+
+                Log.e(TAG,"marker clicked "+marker.getPosition());
+
+                LatLng latLng     = marker.getPosition();
+                String clickedLoc = latLng.latitude+","+latLng.longitude;
+
+                int tagIndexClicked = -1;
+
+                for(int i=0;i<mTagList.size();i++){
+
+                    String coord = mTagList.get(i).getCoord();
+                    if(coord.equals(clickedLoc)){
+                        tagIndexClicked = i;
+                        break;
+                    }
+                }
+                if(tagIndexClicked == -1){
+                    Log.e("qwe","No result");
+                    return false;
+                }
+                Log.e("qwe",""+mTagList.get(tagIndexClicked).getDes());
+
+                Intent i  = new Intent(getActivity(),TagInfo.class);
+                i.putExtra("tagInfo",mTagList.get(tagIndexClicked));
+
+                startActivity(i);
+
+                return true;
+            }
+        });
+
+
     }
+
+
+    private void fetchTagsFromDatabase(){
+
+        Log.e(TAG,"called : fetchTags");
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, TAG_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                if(mTagList.size() !=0)
+                    mTagList.clear();
+
+                Log.e(TAG,"fetchTags : on Response "+response);
+
+                try {
+                    JSONArray jsonArray = new JSONArray(response);
+
+                    JSONObject dbResponse = jsonArray.getJSONObject(0);
+                    int rc        = dbResponse.getInt("response_code");
+                    String  mess  = dbResponse.getString("message");
+
+                    if(rc<=0){
+                        Log.e(TAG,"Response Code : "+rc +" message :" +mess);
+                        return;
+                    }
+
+                    Log.e(TAG,"2");
+
+                    for(int i=1;i<jsonArray.length();i++){
+
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+                        int id = Integer.parseInt(jsonObject.getString("id"));
+                        String title = jsonObject.getString("t_title");
+                        String coord = jsonObject.getString("t_coord");
+                        String imageName = jsonObject.getString("image_name");
+                        String des = jsonObject.getString("t_des");
+                        int status = Integer.parseInt(jsonObject.getString("t_status"));
+
+                        mTagList.add(new Tag(id,title,des,coord,imageName,status));
+                    }
+
+                    addTagsToMap();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG,"Exception cought "+e);
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,error.toString());
+            }
+        }){
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<>();
+
+                String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
+                params.put("a_id",aId);
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
+    }
+
+    private void addTagsToMap(){
+
+        Log.e(TAG,"called : addTagsToMap");
+
+        for(int i=0;i<mTagList.size();i++){
+
+            Tag tagDetails = mTagList.get(i);
+            String coord = tagDetails.getCoord();
+            String[] s;
+            try {
+                s = coord.split(",");
+                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
+                Log.e(TAG,latLng.toString());
+
+                Drawable drawable =  getResources().getDrawable(R.drawable.marker_red);
+                if(tagDetails.getStatus() == 1 )
+                    drawable = getResources().getDrawable(R.drawable.marker_ok);
+
+                Bitmap bitmap = drawableToBitmap(drawable);
+
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(latLng)
+                        .title(tagDetails.getTitle())
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                mMap.addMarker(markerOptions);
+
+
+            }catch (Exception e) {
+                Log.e(TAG,"Exception cought 3");
+            }
+        }
+    }
+
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+//
+//        if(shouldExecuteOnResume) {
+//            Log.e(TAG, "called : onResume");
+//            fetchTagsFromDatabase();
+//        }
+//
+//        shouldExecuteOnResume = true;
+//    }
+
+    private void fetchAllotmentDetails(){
+
+        Log.e(TAG,"called : fetchAllotmentDetails");
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, ALLOTEMENT_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e(TAG, "allotment details : "+response);
+
+                try {
+
+                    JSONArray jsonArray = new JSONArray(response);
+                    JSONObject res = jsonArray.getJSONObject(0);
+
+                    int     rc  = res.getInt("response_code");
+                    String mess = res.getString("message");
+
+                    if(rc <= 0){
+                        Log.e(TAG,"fetchAllotmentDetails : "+mess);
+                        mSession.clearAllotedArea();
+                        return;
+                    }
+                    //Pick the last alloted area (more than one alloted area may be there)
+                    JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
+
+                    String id      = jsonObject.getString("id");
+                    String a_id    = jsonObject.getString("a_id");
+                    String a_time  = jsonObject.getString("a_time");
+                    String a_name  = jsonObject.getString("a_name");
+                    String a_des   = jsonObject.getString("des");
+                    String a_coord = jsonObject.getString("coord");
+
+                    Log.e(TAG,"Allotment AREA ID is "+id);
+
+                    mSession.saveAllotmentDetails(id,a_id,a_time,a_name,a_des,a_coord);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG,"fetchAllotement : exception cought "+e);
+                }
+
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,"onErrorResponse :"+error);
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                HashMap<String,String> params = new HashMap<>();
+
+                String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+                params.put("p_id",p_id);
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
+    }
+
+
+
+
+    /*-------------------------------------Supporting Functions-----------------------------------------------*/
 
     private void getLocationPermission() {
 
@@ -271,7 +530,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         LOCATION_PERMISSION_REQUEST_CODE);
             }
         } else {
-                requestPermissions(permissions,
+            requestPermissions(permissions,
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
@@ -337,175 +596,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 break;
 
         }
-    }
-
-    private void fetchTagsFromDatabase(){
-
-        Log.e(TAG,"called : fetchTags");
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, TAG_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-
-                List<Tag> tagList = new ArrayList<>();
-
-                Log.e(TAG,"fetchTags : on Response "+response);
-
-                try {
-                    JSONArray jsonArray = new JSONArray(response);
-
-                    JSONObject dbResponse = jsonArray.getJSONObject(0);
-                    int rc        = dbResponse.getInt("response_code");
-                    String  mess  = dbResponse.getString("message");
-
-                    if(rc<=0){
-                        Log.e(TAG,"Response Code : "+rc +" message :" +mess);
-                        return;
-                    }
-
-                    Log.e(TAG,"2");
-
-                    for(int i=1;i<jsonArray.length();i++){
-
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-                        int id = Integer.parseInt(jsonObject.getString("id"));
-                        String title = jsonObject.getString("t_title");
-                        String coord = jsonObject.getString("t_coord");
-                        String imageName = jsonObject.getString("image_name");
-                        String des = jsonObject.getString("t_des");
-                        int status = Integer.parseInt(jsonObject.getString("t_status"));
-
-                        tagList.add(new Tag(id,title,des,coord,imageName,status));
-                    }
-
-                    addTagsToMap(tagList);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.e(TAG,"Exception cought "+e);
-                }
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG,error.toString());
-            }
-        }){
-
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                HashMap<String, String> params = new HashMap<>();
-
-                String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
-                params.put("a_id",aId);
-                return params;
-            }
-        };
-
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
-    }
-
-    private void addTagsToMap(List<Tag> tagList){
-
-        for(int i=0;i<tagList.size();i++){
-
-            Tag tagDetails = tagList.get(i);
-
-            String coord = tagDetails.getCoord();
-            String[] s;
-            try {
-                s = coord.split(",");
-                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
-                Log.e(TAG,latLng.toString());
-
-                Drawable drawable =  getResources().getDrawable(R.drawable.marker_red);
-                if(tagDetails.getStatus() == 1 )
-                    drawable = getResources().getDrawable(R.drawable.marker_ok);
-
-                Bitmap bitmap = drawableToBitmap(drawable);
-
-                MarkerOptions markerOptions = new MarkerOptions()
-                        .position(latLng)
-                        .title(tagDetails.getTitle())
-                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                mMap.addMarker(markerOptions);
-
-
-            }catch (Exception e) {
-                Log.e(TAG,"Exception cought 3");
-            }
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        fetchTagsFromDatabase();
-    }
-
-    private void fetchAllotmentDetails(){
-
-        Log.e(TAG,"called : fetchAllotmentDetails");
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, ALLOTEMENT_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Log.e(TAG, "allotment details : "+response);
-
-                try {
-
-                    JSONArray jsonArray = new JSONArray(response);
-                    JSONObject res = jsonArray.getJSONObject(0);
-
-                    int     rc  = res.getInt("response_code");
-                    String mess = res.getString("message");
-
-                    if(rc <= 0){
-                        Log.e(TAG,"fetchAllotmentDetails : "+mess);
-                        return;
-                    }
-                    //Pick the last alloted area (more than one alloted area may be there)
-                    JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
-
-                    String a_id    = jsonObject.getString("a_id");
-                    String a_time  = jsonObject.getString("a_time");
-                    String a_name  = jsonObject.getString("a_name");
-                    String a_des   = jsonObject.getString("des");
-                    String a_coord = jsonObject.getString("coord");
-
-                    mSession.saveAllotmentDetails(a_id,a_time,a_name,a_des,a_coord);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.e(TAG,"fetchAllotement : exception cought");
-                }
-
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-                Log.e(TAG,"onErrorResponse :"+error);
-
-
-            }
-        }){
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                HashMap<String,String> params = new HashMap<>();
-
-                String p_id = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
-                params.put("p_id",p_id);
-                return params;
-            }
-        };
-
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
     private Bitmap drawableToBitmap(Drawable drawable) {

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "190016353742",
+    "firebase_url": "https://beatpolice-7b55f.firebaseio.com",
+    "project_id": "beatpolice-7b55f",
+    "storage_bucket": "beatpolice-7b55f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190016353742:android:bc15ea7ef0a6ee0d",
+        "android_client_info": {
+          "package_name": "com.example.mani.beatpolice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "190016353742-b2lri9pfkd24qmsl0j98vmb76ul20ca2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mani.beatpolice",
+            "certificate_hash": "49ee445a4ab184f5c2acb415f7881ecf4e2f4808"
+          }
+        },
+        {
+          "client_id": "190016353742-d2jrmkebubs3fr1569snjtsks1ml6a3g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpfPWyXsRRHODfoKkNPz4tFnD9jyCZbmI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "190016353742-d2jrmkebubs3fr1569snjtsks1ml6a3g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

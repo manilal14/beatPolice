@@ -3,6 +3,7 @@ package com.example.mani.beatpolice.LoginRelated;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.HashMap;
@@ -14,8 +15,12 @@ public class LoginSessionManager {
     private int PRIVATE_MODE = 0;
     private SharedPreferences.Editor editor;
 
+    private final String TAG = "LoginSessionManager";
+
     private final String PREF_NAME   = "LoginPreference";
     private final String IS_LOGIN    = "IsLoggedIn";
+
+    private final String IS_ALLOTED   = "IsAlloted";
 
     public static final String KEY_POLICE_ID  = "policeId";
     public static final String KEY_PASSWORD   = "password";
@@ -23,7 +28,8 @@ public class LoginSessionManager {
     public static final String KEY_PHONE      = "phone";
     public static final String KEY_PIC        = "pic";
 
-    public static final String KEY_A_ID     = "aId";
+    public static final String KEY_ALLOT_ID   = "allotmentId";
+    public static final String KEY_A_ID       = "aId";
     public static final String KEY_A_TIME     = "aTime";
     public static final String KEY_AREA       = "aName";
     public static final String KEY_DES        = "aDes";
@@ -82,15 +88,32 @@ public class LoginSessionManager {
         return pref.getBoolean(IS_LOGIN, false);
     }
 
+    public boolean isAlloted(){
+        return pref.getBoolean(IS_ALLOTED, false);
+    }
+
+    public void clearAllotedArea(){
+
+        editor.putBoolean(IS_ALLOTED,false);
+
+        editor.putString(KEY_ALLOT_ID,"");
+        editor.putString(KEY_A_ID,"");
+        editor.putString(KEY_A_TIME,"");
+        editor.putString(KEY_AREA,"");
+        editor.putString(KEY_DES,"");
+        editor.putString(KEY_COORD,"");
+        editor.commit();
+    }
+
     public HashMap<String,String> getPoliceDetailsFromPref(){
 
         HashMap<String, String> user = new HashMap<String, String>();
 
-        user.put(KEY_POLICE_ID, pref.getString(KEY_POLICE_ID, null));
-        user.put(KEY_PASSWORD, pref.getString(KEY_PASSWORD, null));
+        user.put(KEY_POLICE_ID, pref.getString(KEY_POLICE_ID, ""));
+        user.put(KEY_PASSWORD, pref.getString(KEY_PASSWORD, ""));
 
-        user.put(KEY_NAME, pref.getString(KEY_NAME, null));
-        user.put(KEY_PHONE, pref.getString(KEY_PHONE, null));
+        user.put(KEY_NAME, pref.getString(KEY_NAME, ""));
+        user.put(KEY_PHONE, pref.getString(KEY_PHONE, ""));
         user.put(KEY_PIC, pref.getString(KEY_PIC, ""));
 
         return user;
@@ -99,12 +122,17 @@ public class LoginSessionManager {
     public void updateProfilePicName(String picName){
 
         editor.putString(KEY_PIC,picName);
+
         editor.commit();
 
     }
 
-    public void saveAllotmentDetails(String a_id, String aTime,String aName,String aDes,String aCoord){
+    public void saveAllotmentDetails(String id, String a_id, String aTime,String aName,String aDes,String aCoord){
 
+        Log.e(TAG, "called : saveAllotedDetails");
+        editor.putBoolean(IS_ALLOTED,true);
+
+        editor.putString(KEY_ALLOT_ID,id);
         editor.putString(KEY_A_ID,a_id);
         editor.putString(KEY_A_TIME,aTime);
         editor.putString(KEY_AREA,aName);
@@ -118,16 +146,15 @@ public class LoginSessionManager {
 
         HashMap<String, String> details = new HashMap<String, String>();
 
+        details.put(KEY_ALLOT_ID, pref.getString(KEY_ALLOT_ID, ""));
         details.put(KEY_A_ID, pref.getString(KEY_A_ID, ""));
         details.put(KEY_A_TIME, pref.getString(KEY_A_TIME, ""));
         details.put(KEY_AREA, pref.getString(KEY_AREA, ""));
         details.put(KEY_DES, pref.getString(KEY_DES, ""));
         details.put(KEY_COORD, pref.getString(KEY_COORD, ""));
 
+        Log.e("check", pref.getString(KEY_ALLOT_ID, "")+" "+pref.getString(KEY_AREA, ""));
         return  details;
-
     }
-
-
 
 }

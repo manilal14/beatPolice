@@ -97,30 +97,34 @@
                     android:layout_height="wrap_content"
                     android:text="Alloted area" />
 
-                <EditText
+                <TextView
                     android:id="@+id/area"
-                    style="@style/edit_text_1"
+                    style="@style/text_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
                     android:text="School of Engineering" />
 
+                <View style="@style/view"/>
+
                 <TextView
+                    android:layout_marginTop="@dimen/margin_between_views"
                     style="@style/text_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Alloted Time" />
 
-                <EditText
+                <TextView
                     android:id="@+id/a_time"
-                    style="@style/edit_text_1"
+                    style="@style/text_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
-                    android:inputType="number" />
+                    android:text="12/11/0000 00:05 AM - 03:00 AM"/>
+
+                <View style="@style/view"/>
 
 
                 <TextView
+                    android:layout_marginTop="@dimen/margin_between_views"
                     style="@style/text_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

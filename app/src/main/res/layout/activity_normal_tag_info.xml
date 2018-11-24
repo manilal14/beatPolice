@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TagsRelated.TagInfo">
+    tools:context=".TagsRelated.NormalTagInfo">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,7 +21,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/page_left_margin"
             android:layout_marginTop="@dimen/margin_between_views"
             android:layout_marginRight="@dimen/page_right_margin"
@@ -31,14 +31,14 @@
                 style="@style/text_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Title" />
+                android:text="@string/name" />
 
             <TextView
                 android:id="@+id/title"
                 style="@style/text_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Title" />
+                android:text="" />
 
             <View style="@style/view"/>
 
@@ -47,32 +47,14 @@
                 style="@style/text_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Location" />
-
-
-            <TextView
-                android:id="@+id/location"
-                style="@style/text_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="12345678910" />
-
-            <View style="@style/view"/>
-
-
-            <TextView
-                android:layout_marginTop="8dp"
-                style="@style/text_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Description" />
+                android:text="@string/description" />
 
             <TextView
                 android:id="@+id/des"
                 style="@style/text_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Description" />
+                android:text="" />
 
             <View style="@style/view"/>
 
@@ -82,16 +64,46 @@
 
     </LinearLayout>
 
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="@dimen/page_top_margin"
+            android:layout_marginLeft="@dimen/page_right_margin"
+            android:layout_marginRight="@dimen/page_right_margin"
+            android:layout_alignParentBottom="true">
+
+            <TextView
+                android:id="@+id/submit"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/verified"
+                style="@style/button_1"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:layout_marginLeft="8dp"
+                android:text="@string/report_issue"
+                style="@style/button_2"/>
+
+        </LinearLayout>
+
+
+
+    </RelativeLayout>
+
     <ProgressBar
         android:id="@+id/image_progress_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="80dp"/>
-
-
-
-
-
-
-
 </FrameLayout>

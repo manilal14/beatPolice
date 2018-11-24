@@ -6,57 +6,175 @@
     android:layout_height="match_parent"
     tools:context=".TagsRelated.AddTag">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginTop="@dimen/page_top_margin"
         android:layout_marginLeft="@dimen/page_left_margin"
-        android:layout_margin="@dimen/page_right_margin">
-
-        <Spinner
-            android:id="@+id/spinner_title"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/spinner_width"
-            android:background="@null">
-
-        </Spinner>
+        android:layout_marginTop="@dimen/page_top_margin"
+        android:layout_marginRight="@dimen/page_right_margin"
+        android:layout_marginBottom="56dp"
+        android:scrollbars="none">
 
         <LinearLayout
-            android:id="@+id/take_photo"
-            android:layout_marginTop="@dimen/margin_between_views"
-            android:layout_marginBottom="@dimen/margin_between_views"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <Spinner
+                android:id="@+id/tag_type"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/spinner_width"
+                android:background="@null" />
+
+            <LinearLayout
+                android:id="@+id/take_photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_between_views"
+                android:layout_marginBottom="@dimen/margin_between_views"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:text="Take picture (optional)"
+                    android:textSize="@dimen/text_size_normal" />
+
+                <ImageView
+                    android:id="@+id/image"
+                    android:layout_width="32dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/camera" />
+            </LinearLayout>
 
             <TextView
-                android:layout_width="0dp"
+                style="@style/text_1"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:text="Take picture (optional)"
-                android:textSize="@dimen/text_size_normal" />
+                android:layout_marginTop="8dp"
+                android:text="@string/name" />
 
-            <ImageView
-                android:id="@+id/image"
-                android:layout_width="32dp"
-                android:layout_height="24dp"
-                android:src="@drawable/camera" />
+            <EditText
+                android:id="@+id/name"
+                style="@style/edit_text_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:text="" />
+
+            <!--Normal tag-->
+            <LinearLayout
+                android:id="@+id/normal"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/description"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/text_area_height"
+                    android:layout_marginTop="@dimen/margin_between_views"
+                    android:background="@drawable/rectangular_background"
+                    android:gravity="start"
+                    android:hint="Small Description..."
+                    android:padding="8dp"
+                    android:textSize="@dimen/text_size_normal" />
+
+            </LinearLayout>
+
+            <!--for senior citizon-->
+            <LinearLayout
+                android:id="@+id/seniour_citizen"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/phone" />
+
+                <EditText
+                    android:id="@+id/phone"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="10"/>
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/gender" />
+
+                <RadioGroup
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="@dimen/margin_between_views">
+
+                        <RadioButton
+                            android:id="@+id/male"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:checked="true"
+                            android:text="@string/male" />
+
+                        <RadioButton
+                            android:id="@+id/female"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/female" />
+                    </RadioGroup>
+
+
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/neighbour" />
+
+                <EditText
+                    android:id="@+id/n_name"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+                <TextView
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/neighbour_phone" />
+
+                <EditText
+                    android:id="@+id/n_phone"
+                    style="@style/edit_text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="10"/>
+
+            </LinearLayout>
+
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/description"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/text_area_height"
-            android:layout_marginTop="@dimen/margin_between_views"
-            android:background="@drawable/rectangular_background"
-            android:gravity="start"
-            android:hint="Describe the problem..."
-            android:padding="8dp"
-            android:textSize="@dimen/text_size_normal" />
 
-    </LinearLayout>
+    </ScrollView>
+
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -64,12 +182,13 @@
 
         <TextView
             android:id="@+id/submit"
+            style="@style/button_style_1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Submit"
             android:layout_alignParentBottom="true"
-            style="@style/button_style_1"/>
+            android:text="@string/submit" />
 
     </RelativeLayout>
+
 
 </FrameLayout>

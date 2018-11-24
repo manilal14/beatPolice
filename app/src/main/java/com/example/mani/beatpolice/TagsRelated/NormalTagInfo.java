@@ -16,33 +16,28 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TAG_PIC_URL;
-import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
-public class TagInfo extends AppCompatActivity {
+public class NormalTagInfo extends AppCompatActivity {
 
     private final String TAG = this.getClass().getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tag_info);
+        setContentView(R.layout.activity_normal_tag_info);
 
         Tag tag = (Tag) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,tag.getId() +"");
 
-        TextView tv_title   = findViewById(R.id.title);
-        TextView tv_loc     = findViewById(R.id.location);
-        TextView tv_des     = findViewById(R.id.des);
-        final ImageView imageView = findViewById(R.id.image);
-
+        TextView tv_title             = findViewById(R.id.title);
+        TextView tv_des               = findViewById(R.id.des);
+        final ImageView imageView     = findViewById(R.id.image);
         final ProgressBar progressBar = findViewById(R.id.image_progress_bar);
 
-        tv_title.setText(tag.getTitle());
-        tv_loc.setText("Location");
+        tv_title.setText(tag.getName());
         tv_des.setText(tag.getDes());
 
 
@@ -50,11 +45,10 @@ public class TagInfo extends AppCompatActivity {
 
         if(!imageName.equals("")) {
 
-            String p_id = new LoginSessionManager(TagInfo.this).getPoliceDetailsFromPref().get(KEY_POLICE_ID);
-            imageName = TAG_PIC_URL + p_id + "/"+imageName;
+            imageName = TAG_PIC_URL + imageName;
             Log.e(TAG,"image url : "+imageName);
 
-            Glide.with(TagInfo.this)
+            Glide.with(NormalTagInfo.this)
                     .load(imageName)
                     .listener(new RequestListener<Drawable>() {
                         @Override
@@ -63,7 +57,7 @@ public class TagInfo extends AppCompatActivity {
                             imageView.setBackgroundResource(R.mipmap.image_not_available);
                             progressBar.setVisibility(View.GONE);
 
-                            Toast.makeText(TagInfo.this,"Failed to load image",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(NormalTagInfo.this,getString(R.string.image_not_available),Toast.LENGTH_SHORT).show();
                             return false;
                         }
 
@@ -74,6 +68,9 @@ public class TagInfo extends AppCompatActivity {
                         }
                     })
                     .into(imageView);
+        }
+        else {
+            progressBar.setVisibility(View.GONE);
         }
 
 

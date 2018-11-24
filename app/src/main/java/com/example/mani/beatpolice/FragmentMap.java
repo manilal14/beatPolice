@@ -34,8 +34,9 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.TagsRelated.AddTag;
+import com.example.mani.beatpolice.TagsRelated.SSTagInfo;
 import com.example.mani.beatpolice.TagsRelated.Tag;
-import com.example.mani.beatpolice.TagsRelated.TagInfo;
+import com.example.mani.beatpolice.TagsRelated.NormalTagInfo;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -67,7 +68,6 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
-import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_COORD;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
@@ -80,7 +80,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private HomePage mActivity;
     private View mRootView;
 
-    private final String TAG_URL = BASE_URL +"fetch_tags.php";
+    private final String TAG_URL = BASE_URL +"fetch_tag.php";
     private final String ALLOTEMENT_URL = BASE_URL + "fetch_allotment_details.php";
 
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -168,15 +168,19 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         }
 
+        fetchTagsFromDatabase();
+
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMapToolbarEnabled(false);
 
         if(!mSession.isAlloted()) {
             Log.e(TAG,"Beat area is not allocated");
+            mRootView.findViewById(R.id.marker_imageview).setVisibility(View.GONE);
             return;
         }
 
         Log.e(TAG,"Beat area is allocated");
+        mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
 
         // Set up polygon
         mPolygonOption  = new PolygonOptions();
@@ -208,7 +212,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         }
 
-        fetchTagsFromDatabase();
+
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
@@ -242,9 +246,14 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 }
                 Log.e(TAG,""+mTagList.get(tagIndexClicked).getDes());
 
-                Intent i  = new Intent(getActivity(),TagInfo.class);
-                i.putExtra("tagInfo",mTagList.get(tagIndexClicked));
+                Intent i;
 
+                if(mTagList.get(tagIndexClicked).getTagType() == 1)
+                     i = new Intent(getActivity(),SSTagInfo.class);
+                else
+                    i  = new Intent(getActivity(),NormalTagInfo.class);
+
+                i.putExtra("tagInfo",mTagList.get(tagIndexClicked));
                 startActivity(i);
 
                 return true;
@@ -254,10 +263,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
+
                 LatLng latLng = mMap.getCameraPosition().target;
-
                 boolean isInside = PolyUtil.containsLocation(latLng,mPolygonOption.getPoints(),false);
-
                 if(!isInside){
                     Log.e(TAG,"outside alloted area");
                     return;
@@ -267,7 +275,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                 boolean isTimeAlloted = checkAllotmentTime();
                 if(!isTimeAlloted) {
-                    Toast.makeText(getActivity(), "You don't have permisssion to tag now", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG,"You don't have permisssion to tag now");
                     return;
                 }
 
@@ -306,20 +314,24 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         return;
                     }
 
-                    Log.e(TAG,"2");
-
                     for(int i=1;i<jsonArray.length();i++){
 
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
 
                         int id = Integer.parseInt(jsonObject.getString("id"));
-                        String title = jsonObject.getString("t_title");
                         String coord = jsonObject.getString("t_coord");
-                        String imageName = jsonObject.getString("image_name");
-                        String des = jsonObject.getString("t_des");
-                        int status = Integer.parseInt(jsonObject.getString("t_status"));
+                        int tagType = Integer.parseInt(jsonObject.getString("t_type"));
 
-                        mTagList.add(new Tag(id,title,des,coord,imageName,status));
+                        String name = jsonObject.getString("name");
+                        String des = jsonObject.getString("des");
+                        String phone = jsonObject.getString("phone");
+                        String gender = jsonObject.getString("gender");
+                        String n_name = jsonObject.getString("n_name");
+                        String n_phone = jsonObject.getString("n_phone");
+
+                        String imageName = jsonObject.getString("image_name");
+
+                        mTagList.add(new Tag(id,coord,tagType,name,des,phone,gender,n_name,n_phone,imageName));
                     }
 
                     addTagsToMap();
@@ -340,9 +352,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String, String> params = new HashMap<>();
-
-                String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
-                params.put("a_id",aId);
                 return params;
             }
         };
@@ -358,22 +367,21 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         for(int i=0;i<mTagList.size();i++){
 
             Tag tagDetails = mTagList.get(i);
-            String coord = tagDetails.getCoord();
+            String coord   = tagDetails.getCoord();
             String[] s;
             try {
                 s = coord.split(",");
                 LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
                 Log.e(TAG,latLng.toString());
 
-                Drawable drawable =  getResources().getDrawable(R.drawable.marker_red);
-                if(tagDetails.getStatus() == 1 )
-                    drawable = getResources().getDrawable(R.drawable.marker_ok);
+                Drawable drawable = getResources().getDrawable(R.drawable.marker_black);
+                if(tagDetails.getTagType() == 1)
+                    drawable = getResources().getDrawable(R.drawable.m_ss);
 
                 Bitmap bitmap = drawableToBitmap(drawable);
-
                 MarkerOptions markerOptions = new MarkerOptions()
                         .position(latLng)
-                        .title(tagDetails.getTitle())
+                        .title(tagDetails.getName())
                         .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
                 mMap.addMarker(markerOptions);
 
@@ -384,17 +392,17 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//
-//        if(shouldExecuteOnResume) {
-//            Log.e(TAG, "called : onResume");
-//            fetchTagsFromDatabase();
-//        }
-//
-//        shouldExecuteOnResume = true;
-//    }
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if(shouldExecuteOnResume) {
+            Log.e(TAG, "called : onResume");
+            fetchTagsFromDatabase();
+        }
+
+        shouldExecuteOnResume = true;
+    }
 
     private void fetchAllotmentDetails(){
 

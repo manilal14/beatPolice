@@ -9,8 +9,10 @@
     <color name="line_color">#eef0f0</color>
     <color name="profile_background">#E0F8F1</color>
     <color name="green">#0B6121</color>
-    <color name="red">#FF0000</color>
+    <color name="red">#da1f26</color>
+    <color name="grey">#896372</color>
     <color name="orange">#ea6015</color>
     <color name="background4">#eef0f0</color>
     <color name="black2">#5d636b</color>
+
 </resources>

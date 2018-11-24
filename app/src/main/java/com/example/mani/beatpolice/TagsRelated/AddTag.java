@@ -17,10 +17,12 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -86,25 +88,44 @@ public class AddTag extends AppCompatActivity {
 
     private void clickListener() {
 
-        Spinner spinnerTitle         = findViewById(R.id.spinner_title);
+        final Spinner spinnerTagType = findViewById(R.id.tag_type);
+
+        final List<String> tagItems = new ArrayList<>();
+        tagItems.add("Normal Tag");
+        tagItems.add("Senior citizen");
+
+        final LinearLayout tagLayout1 = findViewById(R.id.normal);
+        final LinearLayout tagLayout2 = findViewById(R.id.seniour_citizen);
+
+        spinnerTagType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                if(position == 0){
+                    tagLayout1.setVisibility(View.VISIBLE);
+                    tagLayout2.setVisibility(View.GONE);
+                }
+
+                else if(position == 1) {
+                    tagLayout1.setVisibility(View.GONE);
+                    tagLayout2.setVisibility(View.VISIBLE);
+
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTag.this,R.layout.spinner_layout_custom ,tagItems);
+        adapter.setDropDownViewResource(android.R.layout.simple_list_item_1);
+        spinnerTagType.setAdapter(adapter);
+
         LinearLayout takePhotoLayout = findViewById(R.id.take_photo);
         TextView tv_submit           = findViewById(R.id.submit);
 
-
-        List<String> titleItems = new ArrayList<>();
-        titleItems.add("Select Title");
-        titleItems.add("Title 1");
-        titleItems.add("Title 2");
-        titleItems.add("Title 3");
-        titleItems.add("Title 4");
-        titleItems.add("Title 5");
-        titleItems.add("Title 6");
-        titleItems.add("Title 7");
-        titleItems.add("Title 8");
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTag.this,R.layout.spinner_layout_custom ,titleItems);
-        adapter.setDropDownViewResource(android.R.layout.simple_list_item_1);
-        spinnerTitle.setAdapter(adapter);
 
         takePhotoLayout.setOnClickListener(new View.OnClickListener() {
 
@@ -139,7 +160,56 @@ public class AddTag extends AppCompatActivity {
         tv_submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                uploadPicture();
+
+                int tagType = spinnerTagType.getSelectedItemPosition();
+
+                EditText et_name    = findViewById(R.id.name);
+                EditText et_des     = findViewById(R.id.description);
+                EditText et_phone   = findViewById(R.id.phone);
+                RadioButton rMale   = findViewById(R.id.male);
+                RadioButton rFemale = findViewById(R.id.female);
+                EditText et_n_name  = findViewById(R.id.n_name);
+                EditText et_n_phone = findViewById(R.id.n_phone);
+
+                String name     = "";
+                String des      = "";
+                String phone    = "";
+                String gender   = "";
+                String n_name   = "";
+                String n_phone  = "";
+
+
+                if(tagType == 0){
+
+                    name = et_name.getText().toString();
+                    des  = et_des.getText().toString();
+
+                    if(name.equals("") ||des.equals("")){
+                        Toast.makeText(AddTag.this,"Both field are required",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+
+                if(tagType == 1){
+
+                    name  = et_name.getText().toString();
+                    phone = et_phone.getText().toString();
+
+                    if(name.equals("") || phone.equals("")){
+                        Toast.makeText(AddTag.this,"Name and mobile are required",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if(rFemale.isChecked())
+                        gender = "female";
+                    else
+                        gender = "male";
+
+                    n_name  = et_n_name.getText().toString();
+                    n_phone = et_n_phone.getText().toString();
+                }
+
+                uploadPicture(tagType,name,des,phone,gender,n_name,n_phone);
             }
         });
     }
@@ -180,29 +250,14 @@ public class AddTag extends AppCompatActivity {
         }
     }
 
-    public void uploadPicture() {
+    public void uploadPicture(int tagType, String name, String des, String phone, String gender, String n_name, String n_phone) {
 
         Log.e(TAG,"called : sendDetailsToDatabase");
-        Spinner spinnerTitle  = findViewById(R.id.spinner_title);
-
-        final int pos = spinnerTitle.getSelectedItemPosition();
-        if(pos == 0) {
-            Toast.makeText(AddTag.this, "Select title", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        EditText et_des = findViewById(R.id.description);
-        final String des      = et_des.getText().toString();
-        if(des.equals("")){
-            Toast.makeText(AddTag.this, "write dsfsdfdsfdsf", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
         String policeId = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
         String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
 
-        final String title = (String) spinnerTitle.getSelectedItem();
-
-        String uploadUrl = BASE_URL + "add_tag_to_database.php/";
+        String uploadUrl = BASE_URL + "add_tags.php/";
 
         String lat = String.valueOf(mTaggedLocation.latitude);
         String lon = String.valueOf(mTaggedLocation.longitude);
@@ -215,13 +270,21 @@ public class AddTag extends AppCompatActivity {
 
                     .addFileToUpload(mImagePath, "image")
 
-                    .addParameter("a_id",String.valueOf(aId))
+
                     .addParameter("p_id",String.valueOf(policeId))
-                    .addParameter("title",title)
-                    .addParameter("latlng",lat+","+lon)
+                    .addParameter("a_id",String.valueOf(aId))
+                    .addParameter("t_coord",lat+","+lon)
+                    .addParameter("time",mTime)
+                    .addParameter("date",mDate)
+
+                    .addParameter("t_type", String.valueOf(tagType))
+                    .addParameter("name",name)
                     .addParameter("des",des)
-                    .addParameter("t_time",mTime)
-                    .addParameter("t_date",mDate)
+                    .addParameter("phone",phone)
+                    .addParameter("gender",gender)
+                    .addParameter("n_name",n_name)
+                    .addParameter("n_phone",n_phone)
+
 
                     .setNotificationConfig(new UploadNotificationConfig())
                     .setMaxRetries(10)

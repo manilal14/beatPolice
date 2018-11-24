@@ -7,4 +7,16 @@
     <string name="edit_photo">Edit Photo</string>
     <string name="tag_this_">Tag this location</string>
     <string name="outside_your_">Outside your alloted area</string>
+    <string name="female">Female</string>
+    <string name="male">Male</string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
+    <string name="verified">Verified</string>
+    <string name="report_issue">Report issue</string>
+    <string name="phone">Phone</string>
+    <string name="gender">Gender</string>
+    <string name="neighbour">Neighbour</string>
+    <string name="submit">Submit</string>
+    <string name="neighbour_phone">Neighbour phone</string>
+    <string name="image_not_available">Image Not Available</string>
 </resources>

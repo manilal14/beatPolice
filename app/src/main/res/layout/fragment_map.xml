@@ -16,6 +16,7 @@
         tools:context=".HomePage" />
 
     <ImageView
+        android:id="@+id/marker_imageview"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginBottom="56dp"

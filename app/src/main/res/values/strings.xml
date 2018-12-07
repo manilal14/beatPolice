@@ -19,4 +19,9 @@
     <string name="submit">Submit</string>
     <string name="neighbour_phone">Neighbour phone</string>
     <string name="image_not_available">Image Not Available</string>
+    <string name="you_are_">You are outside your alloted area</string>
+    <string name="please_be">Please be inside your alloted area</string>
+    <string name="cancel">Cancel</string>
+    <string name="normal_tag">Normal Tag</string>
+    <string name="senior_citizen">Senior citizen</string>
 </resources>

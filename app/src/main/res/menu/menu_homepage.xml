@@ -4,9 +4,9 @@
     <item
         android:id="@+id/logout"
         android:title="Logout"/>
-    <item
-        android:id="@+id/terminate"
-        android:title="Terminate"/>
+    <!--<item-->
+        <!--android:id="@+id/terminate"-->
+        <!--android:title="Terminate"/>-->
 
 
 </menu>

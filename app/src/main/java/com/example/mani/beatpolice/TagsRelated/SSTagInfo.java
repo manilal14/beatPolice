@@ -25,26 +25,54 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 public class SSTagInfo extends AppCompatActivity {
 
     private final String TAG = SSTagInfo.this.getClass().getSimpleName();
+    Tag mTagInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sstag_info);
 
-        final Tag tagInfo = (Tag) getIntent().getExtras().getSerializable("tagInfo");
+        mTagInfo = (Tag) getIntent().getExtras().getSerializable("tagInfo");
+
+        showDetails();
+        clickListener();
+
+    }
+
+    private void clickListener() {
+
+        TextView btnVerify = findViewById(R.id.verified);
+        TextView btnReport   = findViewById(R.id.report);
+
+
+        btnVerify.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(SSTagInfo.this,"Verified",Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnReport.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(SSTagInfo.this,"Report",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showDetails() {
 
         TextView tv_name    = findViewById(R.id.name);
         TextView tv_phone   = findViewById(R.id.phone);
         TextView tv_gender  = findViewById(R.id.gender);
         TextView tv_n_name  = findViewById(R.id.n_name);
         TextView tv_n_phone = findViewById(R.id.n_phone);
-        TextView tv_verified = findViewById(R.id.verified);
-        TextView tv_report = findViewById(R.id.report);
 
-        final ImageView    imageView = findViewById(R.id.image);
+
+        final ImageView imageView = findViewById(R.id.image);
         final ProgressBar progressBar = findViewById(R.id.image_progress_bar);
 
-        String imageName = tagInfo.getImageName();
+        String imageName = mTagInfo.getImageName();
 
         if(!imageName.equals("")){
 
@@ -75,17 +103,16 @@ public class SSTagInfo extends AppCompatActivity {
         }
 
 
-        tv_name.setText(tagInfo.getName());
-        tv_phone.setText(tagInfo.getPhone());
-        tv_gender.setText(tagInfo.getGender());
-        tv_n_name.setText(tagInfo.getN_name());
-        tv_n_phone.setText(tagInfo.getN_phone());
-
+        tv_name.setText(mTagInfo.getName());
+        tv_phone.setText(mTagInfo.getPhone());
+        tv_gender.setText(mTagInfo.getGender());
+        tv_n_name.setText(mTagInfo.getN_name());
+        tv_n_phone.setText(mTagInfo.getN_phone());
 
         tv_phone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String phone = tagInfo.getPhone();
+                String phone = mTagInfo.getPhone();
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
                 startActivity(intent);
             }
@@ -94,33 +121,11 @@ public class SSTagInfo extends AppCompatActivity {
         tv_n_phone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String phone = tagInfo.getN_phone();
+                String phone = mTagInfo.getN_phone();
                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
                 startActivity(intent);
             }
         });
-
-
-        tv_verified.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(SSTagInfo.this,"Verified",Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        tv_report.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(SSTagInfo.this,"Report",Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-
-
-
-
-
 
 
 

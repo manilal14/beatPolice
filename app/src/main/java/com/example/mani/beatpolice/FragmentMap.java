@@ -168,7 +168,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         }
 
-        fetchTagsFromDatabase();
+
 
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMapToolbarEnabled(false);
@@ -181,6 +181,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         Log.e(TAG,"Beat area is allocated");
         mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
+
+        fetchTagsFromDatabase();
 
         // Set up polygon
         mPolygonOption  = new PolygonOptions();
@@ -240,7 +242,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     }
                 }
                 if(tagIndexClicked == -1){
-                    Log.e(TAG,"Marker to be add is clicked");
+                    Log.e(TAG,"Marker to be added is clicked");
                     showSnackBar(marker.getPosition());
                     return false;
                 }
@@ -267,17 +269,27 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 LatLng latLng = mMap.getCameraPosition().target;
                 boolean isInside = PolyUtil.containsLocation(latLng,mPolygonOption.getPoints(),false);
                 if(!isInside){
-                    Log.e(TAG,"outside alloted area");
+                    Log.e(TAG,"Marker is outside the area alloted");
                     return;
                 }
 
-                Log.e(TAG,"inside");
+                Log.e(TAG,"inside area alloted");
+
 
                 boolean isTimeAlloted = checkAllotmentTime();
                 if(!isTimeAlloted) {
                     Log.e(TAG,"You don't have permisssion to tag now");
                     return;
                 }
+
+                // To ensure you are indside the alloted area
+
+//                boolean isMeInside = PolyUtil.containsLocation(mMyLocation,mPolygonOption.getPoints(),false);
+//                if(!isMeInside){
+//                    Log.e(TAG,"Your Location is outside alloted area");
+//                    return;
+//                }
+//                Log.e(TAG,"you are inside");
 
                 showSnackBar(latLng);
             }
@@ -322,11 +334,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         String coord = jsonObject.getString("t_coord");
                         int tagType = Integer.parseInt(jsonObject.getString("t_type"));
 
-                        String name = jsonObject.getString("name");
-                        String des = jsonObject.getString("des");
-                        String phone = jsonObject.getString("phone");
-                        String gender = jsonObject.getString("gender");
-                        String n_name = jsonObject.getString("n_name");
+                        String name    = jsonObject.getString("name");
+                        String des     = jsonObject.getString("des");
+                        String phone   = jsonObject.getString("phone");
+                        String gender  = jsonObject.getString("gender");
+                        String n_name  = jsonObject.getString("n_name");
                         String n_phone = jsonObject.getString("n_phone");
 
                         String imageName = jsonObject.getString("image_name");
@@ -398,7 +410,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         if(shouldExecuteOnResume) {
             Log.e(TAG, "called : onResume");
-            fetchTagsFromDatabase();
+            //fetchTagsFromDatabase();
         }
 
         shouldExecuteOnResume = true;

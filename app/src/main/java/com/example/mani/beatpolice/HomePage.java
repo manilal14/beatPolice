@@ -113,9 +113,9 @@ public class HomePage extends AppCompatActivity  {
 
         switch (id){
             case R.id.logout: mSession.logout(); finish(); return true;
-            case R.id.terminate:
-                openDialogBox();
-                return true;
+//            case R.id.terminate:
+//                openDialogBox();
+//                return true;
         }
         return false;
     }
@@ -145,7 +145,7 @@ public class HomePage extends AppCompatActivity  {
         }
 
         builder.setTitle("Want to terminate this Beat ?")
-                .setMessage("All detils related to beat area will be removed from App and you will be logged out.")
+                .setMessage("All details related to beat area will be removed from App and you will be logged out.")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         terminateBeat();

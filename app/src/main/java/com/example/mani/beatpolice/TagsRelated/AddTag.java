@@ -60,9 +60,10 @@ public class AddTag extends AppCompatActivity {
     private File file;
     private Uri fileUri;
 
-
     private ProgressDialog mProgressDialog;
     private LoginSessionManager mSession;
+
+
 
 
 
@@ -91,8 +92,8 @@ public class AddTag extends AppCompatActivity {
         final Spinner spinnerTagType = findViewById(R.id.tag_type);
 
         final List<String> tagItems = new ArrayList<>();
-        tagItems.add("Normal Tag");
-        tagItems.add("Senior citizen");
+        tagItems.add(getString(R.string.normal_tag));
+        tagItems.add(getString(R.string.senior_citizen));
 
         final LinearLayout tagLayout1 = findViewById(R.id.normal);
         final LinearLayout tagLayout2 = findViewById(R.id.seniour_citizen);
@@ -109,8 +110,8 @@ public class AddTag extends AppCompatActivity {
                 else if(position == 1) {
                     tagLayout1.setVisibility(View.GONE);
                     tagLayout2.setVisibility(View.VISIBLE);
-
                 }
+
             }
 
             @Override
@@ -119,7 +120,7 @@ public class AddTag extends AppCompatActivity {
             }
         });
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTag.this,R.layout.spinner_layout_custom ,tagItems);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTag.this,R.layout.spinner_layout_custom,tagItems);
         adapter.setDropDownViewResource(android.R.layout.simple_list_item_1);
         spinnerTagType.setAdapter(adapter);
 
@@ -138,13 +139,9 @@ public class AddTag extends AppCompatActivity {
                         != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA},
                             MY_CAMERA_PERMISSION_CODE);
-
-
                 } else {
 
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-
-
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
                         file = new File(AddTag.this.getExternalCacheDir(),
@@ -219,12 +216,11 @@ public class AddTag extends AppCompatActivity {
 
     //On camera result
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
+
         if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
             ImageView imageView = findViewById(R.id.image);
-
             Uri selectedImage = fileUri;
-
             String path = fileUri.getPath();
             getContentResolver().notifyChange(selectedImage, null);
             ContentResolver cr = getContentResolver();
@@ -255,7 +251,7 @@ public class AddTag extends AppCompatActivity {
         Log.e(TAG,"called : sendDetailsToDatabase");
 
         String policeId = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
-        String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
+        String aId      = mSession.getAllotmentDetails().get(KEY_A_ID);
 
         String uploadUrl = BASE_URL + "add_tags.php/";
 

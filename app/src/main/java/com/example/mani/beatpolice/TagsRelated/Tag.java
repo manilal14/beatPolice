@@ -16,6 +16,7 @@ public class Tag implements Serializable {
     private String n_phone;
     private String imageName;
 
+
     public Tag(int id, String coord, int tagType, String name, String des, String phone,
                String gender, String n_name, String n_phone, String imageName) {
         this.id = id;

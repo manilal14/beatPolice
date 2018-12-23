@@ -47,6 +47,7 @@ import com.bumptech.glide.request.target.Target;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
@@ -78,7 +79,7 @@ public class NormalTagInfo extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
     private final String ISSUE_URL = BASE_URL + "fetch_issues_type.php";
 
-    private Tag mTagDeails;
+    private AreaTagTable mTagDeails;
     private List<String> mIssueList;
 
     private  final int MY_CAMERA_PERMISSION_CODE = 100;
@@ -106,7 +107,7 @@ public class NormalTagInfo extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_normal_tag_info);
 
-        mTagDeails = (Tag) getIntent().getExtras().getSerializable("tagInfo");
+        mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,mTagDeails.getId() +"");
 
         mIssueList = new ArrayList<>();

@@ -19,20 +19,21 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.mani.beatpolice.R;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TAG_PIC_URL;
 
 public class SSTagInfo extends AppCompatActivity {
 
     private final String TAG = SSTagInfo.this.getClass().getSimpleName();
-    Tag mTagInfo;
+    AreaTagTable mTagInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sstag_info);
 
-        mTagInfo = (Tag) getIntent().getExtras().getSerializable("tagInfo");
+        mTagInfo = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
 
         showDetails();
         clickListener();

@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#f8f9f9"
     tools:context=".TagsRelated.SSTagInfo">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/toolbar_height"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <ImageView
+            android:id="@+id/image"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/toolbar_height"
-            android:orientation="vertical">
+            android:layout_height="200dp"
+            android:background="@color/white"
+            android:src="@mipmap/image_not_available" />
 
-            <ImageView
-                android:id="@+id/image"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:background="@color/white"
-                android:src="@mipmap/image_not_available" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -114,20 +113,18 @@
                     android:text="7907877801"
                     android:drawableRight="@drawable/call"/>
 
-                <View style="@style/view" />
+                <View style="@style/view"
+                    android:layout_marginBottom="16dp"/>
 
 
             </LinearLayout>
 
+        </ScrollView>
 
-        </LinearLayout>
-
-
-    </ScrollView>
+    </LinearLayout>
 
 
-
-
+    <!--Bottom buttoms-->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -167,6 +164,7 @@
 
     </RelativeLayout>
 
+    <!--progress bar for image loading-->
     <ProgressBar
         android:id="@+id/image_progress_bar"
         android:layout_width="match_parent"

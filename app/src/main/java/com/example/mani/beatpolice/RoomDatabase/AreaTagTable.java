@@ -1,10 +1,14 @@
-package com.example.mani.beatpolice.TagsRelated;
+package com.example.mani.beatpolice.RoomDatabase;
+
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 
 import java.io.Serializable;
 
+@Entity
+public class AreaTagTable implements Serializable {
 
-public class Tag implements Serializable {
-
+    @PrimaryKey
     private int id;
     private int aId;
     private String coord;
@@ -18,8 +22,13 @@ public class Tag implements Serializable {
     private String n_phone;
     private String imageName;
 
-    public Tag(int id, int aId, String coord, int tagType, String name, String des, String phone,
-               String gender, String n_name, String n_phone, String imageName) {
+    // 0 - unvisited
+    // 1 - visited and ok
+    // 2 - visited and issue reported
+    private int status;
+
+    public AreaTagTable(int id, int aId, String coord, int tagType, String name, String des,
+                        String phone, String gender, String n_name, String n_phone, String imageName) {
         this.id = id;
         this.aId = aId;
         this.coord = coord;
@@ -31,6 +40,8 @@ public class Tag implements Serializable {
         this.n_name = n_name;
         this.n_phone = n_phone;
         this.imageName = imageName;
+
+        this.status = 0;
     }
 
     public int getId() {
@@ -120,6 +131,12 @@ public class Tag implements Serializable {
     public void setImageName(String imageName) {
         this.imageName = imageName;
     }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
 }
-
-

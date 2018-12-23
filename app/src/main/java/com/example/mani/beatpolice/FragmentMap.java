@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,10 +34,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
+import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.example.mani.beatpolice.TagsRelated.AddTag;
+import com.example.mani.beatpolice.TagsRelated.NormalTagInfo;
 import com.example.mani.beatpolice.TagsRelated.SSTagInfo;
 import com.example.mani.beatpolice.TagsRelated.Tag;
-import com.example.mani.beatpolice.TagsRelated.NormalTagInfo;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -68,6 +72,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_COORD;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
@@ -102,8 +107,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private PolygonOptions mPolygonOption;
     private  Marker mToAdd;
 
-
-
+    private List<AreaTagTable> mAreaTagList;
 
     public FragmentMap() {}
 
@@ -122,6 +126,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG, "Called : onCreate");
         mActivity.getSupportActionBar().hide();
         mSession = new LoginSessionManager(getActivity());
+
+        mAreaTagList = new ArrayList<>();
 
         mTagList = new ArrayList<>();
 
@@ -168,10 +174,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         }
 
-
-
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMapToolbarEnabled(false);
+
+        //Fetching all the tags from database
+        fetchAllTagsFromDatabase();
 
         if(!mSession.isAlloted()) {
             Log.e(TAG,"Beat area is not allocated");
@@ -182,7 +189,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG,"Beat area is allocated");
         mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
 
-        fetchTagsFromDatabase();
+
 
         // Set up polygon
         mPolygonOption  = new PolygonOptions();
@@ -233,9 +240,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                 int tagIndexClicked = -1;
 
-                for(int i=0;i<mTagList.size();i++){
+                for(int i=0;i<mAreaTagList.size();i++){
 
-                    String coord = mTagList.get(i).getCoord();
+                    String coord = mAreaTagList.get(i).getCoord();
                     if(coord.equals(clickedLoc)){
                         tagIndexClicked = i;
                         break;
@@ -246,16 +253,16 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     showSnackBar(marker.getPosition());
                     return false;
                 }
-                Log.e(TAG,""+mTagList.get(tagIndexClicked).getDes());
+                Log.e(TAG,""+mAreaTagList.get(tagIndexClicked).getDes());
 
                 Intent i;
 
-                if(mTagList.get(tagIndexClicked).getTagType() == 1)
+                if(mAreaTagList.get(tagIndexClicked).getTagType() == 1)
                      i = new Intent(getActivity(),SSTagInfo.class);
                 else
                     i  = new Intent(getActivity(),NormalTagInfo.class);
 
-                i.putExtra("tagInfo",mTagList.get(tagIndexClicked));
+                i.putExtra("tagInfo",mAreaTagList.get(tagIndexClicked));
                 startActivity(i);
 
                 return true;
@@ -282,7 +289,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     return;
                 }
 
-                // To ensure you are indside the alloted area
+                // To ensure you are inside the alloted area
 
 //                boolean isMeInside = PolyUtil.containsLocation(mMyLocation,mPolygonOption.getPoints(),false);
 //                if(!isMeInside){
@@ -298,10 +305,52 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     }
 
+    private void saveTagsToRoom() {
+
+        Log.e(TAG,"called : saveTagsToRoom");
+
+        int allottedAreaId = Integer.parseInt(mSession.getAllotmentDetails().get(KEY_A_ID));
+
+        List<AreaTagTable> areaTagTableList = new ArrayList<>();
+
+        for (int i = 0; i < mTagList.size(); i++) {
+
+            Tag tag = mTagList.get(i);
+
+            if (tag.getAId() == allottedAreaId) {
+                int id = tag.getId();
+                int aId = tag.getAId();
+
+                String coord = tag.getCoord();
+                int tagType = tag.getTagType();
+
+                String name = tag.getName();
+                String des = tag.getDes();
+                String phone = tag.getPhone();
+                String gender = tag.getGender();
+                String n_name = tag.getN_name();
+                String n_phone = tag.getN_phone();
+                String imageName = tag.getImageName();
+
+                areaTagTableList.add(new AreaTagTable(id, aId, coord, tagType, name, des, phone, gender, n_name, n_phone, imageName));
+            }
+        }
+
+        //To remove the tags inside the area from general list
+        for (int i = mTagList.size() - 1; i >= 0; i--) {
+            Tag tag = mTagList.get(i);
+            if (tag.getAId() == allottedAreaId)
+                mTagList.remove(i);
+        }
+
+        // Add tags of alloted area to room database
+        new MyTask(BeatPoliceDb.getInstance(mActivity)).execute(areaTagTableList);
 
 
+    }
 
-    private void fetchTagsFromDatabase(){
+
+    private void fetchAllTagsFromDatabase(){
 
         Log.e(TAG,"called : fetchTags");
 
@@ -331,6 +380,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
 
                         int id = Integer.parseInt(jsonObject.getString("id"));
+                        int aId = Integer.parseInt(jsonObject.getString("a_id"));
+
                         String coord = jsonObject.getString("t_coord");
                         int tagType = Integer.parseInt(jsonObject.getString("t_type"));
 
@@ -343,10 +394,14 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                         String imageName = jsonObject.getString("image_name");
 
-                        mTagList.add(new Tag(id,coord,tagType,name,des,phone,gender,n_name,n_phone,imageName));
+                        mTagList.add(new Tag(id,aId,coord,tagType,name,des,phone,gender,n_name,n_phone,imageName));
                     }
 
-                    addTagsToMap();
+                    if(mSession.isAlloted())
+                        saveTagsToRoom();
+
+                    addOutsideTagsToMap(mTagList);
+
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -372,13 +427,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
-    private void addTagsToMap(){
+    private void addOutsideTagsToMap(List<Tag> tagList){
 
         Log.e(TAG,"called : addTagsToMap");
 
-        for(int i=0;i<mTagList.size();i++){
+        for(int i=0;i<tagList.size();i++){
 
-            Tag tagDetails = mTagList.get(i);
+            Tag tagDetails = tagList.get(i);
             String coord   = tagDetails.getCoord();
             String[] s;
             try {
@@ -656,6 +711,66 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     }
                 });
         snackbar.show();
+
+    }
+
+    class MyTask extends AsyncTask<List<AreaTagTable>,Void,Void> {
+
+        private final AreaTagTableDao areaTagTableDao;
+
+
+        public MyTask(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
+        }
+
+        @Override
+        protected Void doInBackground(List<AreaTagTable>... lists) {
+
+            areaTagTableDao.deleteAll();
+            areaTagTableDao.insert(lists[0]);
+
+            mAreaTagList = areaTagTableDao.getAllAreaTags();
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            showTagInsideArea();
+        }
+    }
+
+    private void showTagInsideArea() {
+
+        Log.e(TAG,"called : showTagInsideArea");
+
+
+        for(int i=0;i<mAreaTagList.size();i++){
+
+            AreaTagTable tagDetails = mAreaTagList.get(i);
+            String coord            = tagDetails.getCoord();
+            String[] s;
+            try {
+                s = coord.split(",");
+                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
+
+                Drawable drawable = getResources().getDrawable(R.drawable.marker_black);
+                if(tagDetails.getTagType() == 1)
+                    drawable = getResources().getDrawable(R.drawable.m_ss);
+
+                Bitmap bitmap = drawableToBitmap(drawable);
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(latLng)
+                        .title(tagDetails.getName())
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                mMap.addMarker(markerOptions);
+
+
+            }catch (Exception e) {
+                Log.e(TAG,"Exception cought 3");
+            }
+        }
 
     }
 

@@ -39,9 +39,7 @@ dependencies {
     //Google places
     implementation 'com.google.android.gms:play-services-places:15.0.1'
 
-//    implementation 'com.google.android.gms:play-services-location:16.0.0'
-//    implementation 'com.google.android.gms:play-services-places:16.0.0'
-
+    //map utility function
     implementation 'com.google.maps.android:android-maps-utils:0.5'
 
     implementation 'com.android.volley:volley:1.1.1'
@@ -61,6 +59,10 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
 
     implementation 'com.google.firebase:firebase-messaging:17.3.4'
+
+    //Room database
+    implementation 'android.arch.persistence.room:runtime:1.0.0'
+    annotationProcessor 'android.arch.persistence.room:compiler:1.0.0'
 
 
 }

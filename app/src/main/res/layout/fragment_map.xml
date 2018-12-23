@@ -23,5 +23,15 @@
         android:layout_gravity="center"
         android:src="@drawable/marker"/>
 
+    <ImageView
+        android:id="@+id/refresh"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/redresh"
+        android:background="@color/white"
+        android:padding="8dp" />
+
 
 </android.support.design.widget.CoordinatorLayout>

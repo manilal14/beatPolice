@@ -16,6 +16,9 @@ public interface AreaTagTableDao {
     @Query("SELECT * FROM AreaTagTable WHERE AreaTagTable.id = :id")
     AreaTagTable getTagById(int id);
 
+    @Query("UPDATE AreaTagTable  SET status = :status WHERE AreaTagTable.id = :id")
+    void updateTagStatus(int id,int status);
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(AreaTagTable tag);

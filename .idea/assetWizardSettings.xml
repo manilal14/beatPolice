@@ -23,7 +23,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/media/mani/imp_files/installed%20applications/android-studio/plugins/android/lib/android.jar!/images/material_design_icons/hardware/ic_phone_iphone_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/media/mani/imp_files/installed%20applications/android-studio/plugins/android/lib/android.jar!/images/material_design_icons/navigation/ic_refresh_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -33,7 +33,7 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="call" />
+                            <entry key="outputName" value="redresh" />
                             <entry key="sourceFile" value="$USER_HOME$/Downloads/navigation(1).svg" />
                           </map>
                         </option>

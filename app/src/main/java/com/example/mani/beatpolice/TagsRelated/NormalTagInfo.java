@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -48,6 +49,8 @@ import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
+import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
@@ -66,7 +69,9 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
@@ -78,6 +83,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
     private final String TAG = this.getClass().getSimpleName();
     private final String ISSUE_URL = BASE_URL + "fetch_issues_type.php";
+    private final String REPORT_ISSUE_URL = BASE_URL + "report_issue.php";
 
     private AreaTagTable mTagDeails;
     private List<String> mIssueList;
@@ -87,7 +93,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
     private  View mDialogView;
 
-    private String mImagePath;
+    private String mImagePath = null;
     private Uri mFileUri;
 
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -133,19 +139,60 @@ public class NormalTagInfo extends AppCompatActivity {
         btnVerified.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(TAG,"Verified button is clicked");
+               sendReportWithoutImage(0,"Ok",1,1);
             }
         });
 
         btnReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(TAG,"Report button is clicked");
-
+                mImagePath = null;
                 dialogIssueReport();
             }
         });
 
+    }
+    private void showDetails() {
+
+        TextView tv_title             = findViewById(R.id.title);
+        TextView tv_des               = findViewById(R.id.des);
+        final ImageView imageView     = findViewById(R.id.image);
+        final ProgressBar progressBar = findViewById(R.id.image_progress_bar);
+
+        tv_title.setText(mTagDeails.getName());
+        tv_des.setText(mTagDeails.getDes());
+
+
+        String imageName = mTagDeails.getImageName();
+
+        if(!imageName.equals("")) {
+
+            imageName = TAG_PIC_URL + imageName;
+            Log.e(TAG,"image url : "+imageName);
+
+            Glide.with(NormalTagInfo.this)
+                    .load(imageName)
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+
+                            imageView.setBackgroundResource(R.mipmap.image_not_available);
+                            progressBar.setVisibility(View.GONE);
+
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            progressBar.setVisibility(View.GONE);
+                            return false;
+                        }
+                    })
+                    .into(imageView);
+        }
+        else {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void dialogIssueReport() {
@@ -162,6 +209,7 @@ public class NormalTagInfo extends AppCompatActivity {
         }
 
         alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
 
 
         final Spinner spinnerIssue  = mDialogView.findViewById(R.id.issue_title);
@@ -217,9 +265,20 @@ public class NormalTagInfo extends AppCompatActivity {
             public void onClick(View v) {
 
                     int issueType = spinnerIssue.getSelectedItemPosition() + 1;
-                    String des    = et_des.getText().toString();
+                    String des    = et_des.getText().toString().trim();
 
-                    sendIssue(issueType,des);
+                    if(des.equals("")){
+                        Toast.makeText(NormalTagInfo.this,"Write description",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if(mImagePath != null)
+                        sendIssueWithImage(issueType,des,0,mImagePath);
+                    else {
+                        sendReportWithoutImage(issueType,des,0,2);
+                    }
+
+                    alertDialog.dismiss();
 
             }
         });
@@ -229,10 +288,9 @@ public class NormalTagInfo extends AppCompatActivity {
 
     }
 
-
-
     //On camera result
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
+
         Log.e(TAG,"onActivityResult : called");
 
         if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
@@ -265,49 +323,7 @@ public class NormalTagInfo extends AppCompatActivity {
         }
     }
 
-    private void showDetails() {
 
-        TextView tv_title             = findViewById(R.id.title);
-        TextView tv_des               = findViewById(R.id.des);
-        final ImageView imageView     = findViewById(R.id.image);
-        final ProgressBar progressBar = findViewById(R.id.image_progress_bar);
-
-        tv_title.setText(mTagDeails.getName());
-        tv_des.setText(mTagDeails.getDes());
-
-
-        String imageName = mTagDeails.getImageName();
-
-        if(!imageName.equals("")) {
-
-            imageName = TAG_PIC_URL + imageName;
-            Log.e(TAG,"image url : "+imageName);
-
-            Glide.with(NormalTagInfo.this)
-                    .load(imageName)
-                    .listener(new RequestListener<Drawable>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-
-                            imageView.setBackgroundResource(R.mipmap.image_not_available);
-                            progressBar.setVisibility(View.GONE);
-
-                            Toast.makeText(NormalTagInfo.this,getString(R.string.image_not_available),Toast.LENGTH_SHORT).show();
-                            return false;
-                        }
-
-                        @Override
-                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                            progressBar.setVisibility(View.GONE);
-                            return false;
-                        }
-                    })
-                    .into(imageView);
-        }
-        else {
-            progressBar.setVisibility(View.GONE);
-        }
-    }
 
     private void fetchIssueTypes(){
 
@@ -414,37 +430,38 @@ public class NormalTagInfo extends AppCompatActivity {
 
     }
 
-    private void sendIssue(int issueType, String des) {
 
-        Log.e(TAG,"called : sendIssue");
+
+    // When image need to be send
+    private void sendIssueWithImage(int issueType, String des, final int checkValue, String imagePath) {
+
+        Log.e(TAG,"called : sendIssueWithImage");
 
         //String policeId = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
 
         String allotId = new LoginSessionManager(NormalTagInfo.this).getAllotmentDetails().get(KEY_ALLOT_ID);
-        String tagId = "14524";
-        String checkValue = "0";
+        String tagId = String.valueOf(mTagDeails.getId());
+        final String check = String.valueOf(checkValue);
         long currUnixTime = System.currentTimeMillis()/1000L;
         String time = String.valueOf(currUnixTime);
         String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
 
-        String UPLOAD_URL = BASE_URL + "report_issue.php";
-
         try {
 
-            new MultipartUploadRequest(NormalTagInfo.this,UPLOAD_URL)
+            new MultipartUploadRequest(NormalTagInfo.this,REPORT_ISSUE_URL)
 
-                    .addFileToUpload(mImagePath, "image")
+                    .addFileToUpload(imagePath, "image")
 
                     .addParameter("allot_id",allotId)
                     .addParameter("tag_id",tagId)
-                    .addParameter("check",checkValue)
+                    .addParameter("check",check)
                     .addParameter("issue_id",String.valueOf(issueType))
                     .addParameter("des",des)
                     .addParameter("time",time)
                     .addParameter("my_pos",myLocation)
 
                     .setNotificationConfig(new UploadNotificationConfig())
-                    .setMaxRetries(10)
+                    .setMaxRetries(2)
                     .setDelegate(new UploadStatusDelegate() {
                         @Override
                         public void onProgress(Context context, UploadInfo uploadInfo) {
@@ -454,27 +471,29 @@ public class NormalTagInfo extends AppCompatActivity {
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
                             mProgressDialog.dismiss();
-                            Log.e("TAG1",serverResponse.toString());
-                            Log.e("TAG2",uploadInfo.toString());
-                            if(exception!=null)
-                                Log.e("TAG3",exception.toString());
-
                             Toast.makeText(NormalTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
-
-
                         }
 
                         @Override
                         public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
                             mProgressDialog.dismiss();
-                            Toast.makeText(NormalTagInfo.this,"Issue Reported",Toast.LENGTH_SHORT).show();
-                            finish();
+
+                            String message ="";
+                            if(checkValue == 0){
+                                message = "Issue Reported";
+                            }
+                            else {
+                                message = "verified";
+                            }
+
+                            Toast.makeText(NormalTagInfo.this,message,Toast.LENGTH_SHORT).show();
+                            new UpdateTagColor(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(2);
+
 
                         }
 
                         @Override
                         public void onCancelled(Context context, UploadInfo uploadInfo) {
-
                             mProgressDialog.dismiss();
                             Toast.makeText(NormalTagInfo.this,"Upload cancle",Toast.LENGTH_SHORT).show();
 
@@ -485,12 +504,89 @@ public class NormalTagInfo extends AppCompatActivity {
         } catch (Exception e) {
             mProgressDialog.dismiss();
             Log.e(TAG, e.toString());
-            Toast.makeText(NormalTagInfo.this,"Error uploadinglknl",Toast.LENGTH_SHORT).show();
+            Toast.makeText(NormalTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
             finish();
 
 
         }
 
+    }
+
+    // Without image, ReportType = 1(for veified), 2(for issue report)
+    private void sendReportWithoutImage(final int issueType, final String des, final int checkValue, final int reportType) {
+
+        Log.e(TAG,"called : sendReportWithoutImage");
+
+        long currUnixTime = System.currentTimeMillis()/1000L;
+        final String time = String.valueOf(currUnixTime);
+
+        final String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, REPORT_ISSUE_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e(TAG,"------" + response);
+                Toast.makeText(NormalTagInfo.this,"Success",Toast.LENGTH_SHORT).show();
+
+                //For verired 1, issue reported = 2
+                new UpdateTagColor(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(reportType);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                HashMap<String, String> params = new HashMap<>();
+
+                LoginSessionManager mSeesion = new LoginSessionManager(NormalTagInfo.this);
+
+                String allotId = mSeesion.getAllotmentDetails().get(KEY_ALLOT_ID);
+                String tagId  = String.valueOf(mTagDeails.getId());
+
+                params.put("allot_id",allotId);
+                params.put("tag_id",tagId);
+                params.put("check",String.valueOf(checkValue));
+                params.put("issue_id",String.valueOf(issueType));
+                params.put("des",des);
+                params.put("time",time);
+                params.put("my_pos",myLocation);
+
+
+
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        MySingleton.getInstance(NormalTagInfo.this).addToRequestQueue(stringRequest);
+
+    }
+
+    class UpdateTagColor extends AsyncTask<Integer,Void,Void> {
+
+        private final AreaTagTableDao areaTagTableDao;
+
+        public UpdateTagColor(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
+
+        }
+
+
+        @Override
+        protected Void doInBackground(Integer... integers) {
+            areaTagTableDao.updateTagStatus(mTagDeails.getId(),integers[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            onBackPressed();
+        }
     }
 }
 

@@ -24,6 +24,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
@@ -48,6 +50,7 @@ import com.bumptech.glide.request.target.Target;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
+import com.example.mani.beatpolice.ReportHistory;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
@@ -78,6 +81,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TAG_PIC_URL;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 
 public class SSTagInfo extends AppCompatActivity {
 
@@ -134,12 +138,18 @@ public class SSTagInfo extends AppCompatActivity {
     private void clickListener() {
 
         TextView btnVerify = findViewById(R.id.verified);
-        TextView btnReport   = findViewById(R.id.report);
-
+        TextView btnReport = findViewById(R.id.report);
 
         btnVerify.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                boolean isTimeAlloted = checkAllotmentTime();
+                if(!isTimeAlloted) {
+                    Toast.makeText(SSTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 sendReportWithoutImage(0,"Ok",1,1);
             }
         });
@@ -147,6 +157,13 @@ public class SSTagInfo extends AppCompatActivity {
         btnReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                boolean isTimeAlloted = checkAllotmentTime();
+                if(!isTimeAlloted) {
+                    Toast.makeText(SSTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 mImagePath = null;
                 dialogIssueReport();
             }
@@ -179,7 +196,6 @@ public class SSTagInfo extends AppCompatActivity {
                         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                             imageView.setBackgroundResource(R.mipmap.image_not_available);
                             progressBar.setVisibility(View.GONE);
-                            Toast.makeText(SSTagInfo.this,getString(R.string.image_not_available),Toast.LENGTH_SHORT).show();
                             return false;
                         }
                         @Override
@@ -424,8 +440,6 @@ public class SSTagInfo extends AppCompatActivity {
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
-
-
     private void getDeviceLocation()  {
 
         Log.e(TAG, "getDeviceLocation");
@@ -458,6 +472,57 @@ public class SSTagInfo extends AppCompatActivity {
 
 
     }
+    private boolean checkAllotmentTime() {
+
+        LoginSessionManager session = new LoginSessionManager(SSTagInfo.this);
+        String aTime = session.getAllotmentDetails().get(KEY_A_TIME);
+
+        String[] s2;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s2 = aTime.split(",");
+
+            sTime = Long.valueOf(s2[0]);
+            eTime = Long.valueOf(s2[1]);
+
+        }catch (Exception e){
+            Log.e(TAG,"Exception cought 2");
+        }
+
+        long currUnixTime = System.currentTimeMillis()/1000L;
+
+
+        if( ! (currUnixTime >= sTime && currUnixTime <= eTime ))
+            return false;
+
+
+        return true;
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_tag_hisory,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id){
+            case R.id.history:
+                Intent i = new Intent(SSTagInfo.this,ReportHistory.class);
+                i.putExtra("tagId",mTagDeails.getId());
+                startActivity(i);
+                return true;
+
+        }
+        return false;
+    }
+
 
     // When image need to be send
     private void sendIssueWithImage(int issueType, String des, final int checkValue, String imagePath) {
@@ -616,127 +681,4 @@ public class SSTagInfo extends AppCompatActivity {
         }
     }
 
-
-
-//    private void sendTagDetailtoDatabase(final int status, final String des, final int issueId, final String image) {
-//
-//        String SEND_URL = BASE_URL + "";
-//
-//        long currUnixTime = System.currentTimeMillis()/1000L;
-//        final String time = String.valueOf(currUnixTime);
-//
-//        StringRequest stringRequest = new StringRequest(Request.Method.POST, SEND_URL, new Response.Listener<String>() {
-//            @Override
-//            public void onResponse(String response) {
-//
-//                Log.e(TAG,response);
-//
-//            }
-//        }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                Log.e(TAG,error.toString());
-//            }
-//        }){
-//            @Override
-//            protected Map<String, String> getParams() {
-//                HashMap<String, String> params = new HashMap<>();
-//
-//                LoginSessionManager mSeesion = new LoginSessionManager(SSTagInfo.this);
-//
-//                String allotId = mSeesion.getAllotmentDetails().get(KEY_ALLOT_ID);
-//                String tagId  = String.valueOf(mTagDeails.getId());
-//
-//                params.put("allot_id",allotId);
-//                params.put("tag_id",tagId);
-//                params.put("check",String.valueOf(status));
-//                params.put("issue_id",String.valueOf(issueId));
-//                params.put("des",des);
-//                params.put("time",time);
-//                params.put("position",mMyLocation);
-//                params.put("image",image);
-//
-//
-//                return params;
-//            }
-//        };
-//
-//        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-//        MySingleton.getInstance(SSTagInfo.this).addToRequestQueue(stringRequest);
-//
-//    }
-//    private void getLocationPermission() {
-//
-//        Log.e(TAG, "getLocationPermission");
-//
-//        String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_COARSE_LOCATION};
-//
-//        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-//                FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//            if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-//                    COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//                mLocationPermissionsGranted = true;
-//
-//                getDeviceLocation();
-//
-//            } else {
-//                ActivityCompat.requestPermissions(this,
-//                        permissions,
-//                        LOCATION_PERMISSION_REQUEST_CODE);
-//            }
-//        } else {
-//            ActivityCompat.requestPermissions(this,
-//                    permissions,
-//                    LOCATION_PERMISSION_REQUEST_CODE);
-//        }
-//    }
-//    private void getDeviceLocation()  {
-//
-//        Log.e(TAG, "getDeviceLocation");
-//
-//        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-//        try {
-//            if (mLocationPermissionsGranted) {
-//                final Task location = mFusedLocationProviderClient.getLastLocation();
-//                location.addOnCompleteListener(new OnCompleteListener() {
-//                    @Override
-//                    public void onComplete(@NonNull Task task) {
-//
-//                        if (task.isSuccessful()) {
-//                            Location location = (Location) task.getResult();
-//                            mMyLocation = String.valueOf(location.getLatitude()) + "," + String.valueOf(location.getLongitude());
-//                        } else {
-//                            Log.e(TAG, "onComplete: current location is null");
-//                        }
-//                    }
-//                });
-//            }
-//        } catch (SecurityException e) {
-//            Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
-//
-//        }
-//
-//    }
-//    class UpdateTagVeridied extends AsyncTask<Void,Void,Void> {
-//
-//        private final AreaTagTableDao areaTagTableDao;
-//
-//        public UpdateTagVeridied(BeatPoliceDb instance) {
-//            areaTagTableDao = instance.getAreaTagTableDao();
-//
-//        }
-//
-//        @Override
-//        protected Void doInBackground(Void... voids) {
-//            areaTagTableDao.updateTagStatus(mTagDeails.getId(),1);
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            super.onPostExecute(aVoid);
-//            onBackPressed();
-//        }
-//    }
 }

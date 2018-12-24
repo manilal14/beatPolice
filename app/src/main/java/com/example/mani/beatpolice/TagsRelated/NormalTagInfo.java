@@ -24,6 +24,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
@@ -48,6 +50,7 @@ import com.bumptech.glide.request.target.Target;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
+import com.example.mani.beatpolice.ReportHistory;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
@@ -78,6 +81,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TAG_PIC_URL;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 
 public class NormalTagInfo extends AppCompatActivity {
 
@@ -108,6 +112,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,6 +120,8 @@ public class NormalTagInfo extends AppCompatActivity {
 
         mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,mTagDeails.getId() +"");
+
+
 
         mIssueList = new ArrayList<>();
         mProgressDialog = new ProgressDialog(NormalTagInfo.this);
@@ -133,12 +140,20 @@ public class NormalTagInfo extends AppCompatActivity {
 
     private void clickListener() {
 
+        LinearLayout reportButtons = findViewById(R.id.report_layout);
+        reportButtons.setVisibility(View.VISIBLE);
+
         TextView btnVerified = findViewById(R.id.verified);
         TextView btnReport = findViewById(R.id.report_issue);
 
         btnVerified.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                boolean isTimeAlloted = checkAllotmentTime();
+                if(!isTimeAlloted) {
+                    Toast.makeText(NormalTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
                sendReportWithoutImage(0,"Ok",1,1);
             }
         });
@@ -146,6 +161,11 @@ public class NormalTagInfo extends AppCompatActivity {
         btnReport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                boolean isTimeAlloted = checkAllotmentTime();
+                if(!isTimeAlloted) {
+                    Toast.makeText(NormalTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 mImagePath = null;
                 dialogIssueReport();
             }
@@ -323,8 +343,6 @@ public class NormalTagInfo extends AppCompatActivity {
         }
     }
 
-
-
     private void fetchIssueTypes(){
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, ISSUE_URL, new Response.Listener<String>() {
@@ -487,7 +505,7 @@ public class NormalTagInfo extends AppCompatActivity {
                             }
 
                             Toast.makeText(NormalTagInfo.this,message,Toast.LENGTH_SHORT).show();
-                            new UpdateTagColor(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(2);
+                            new UpdateTagStatusinRoom(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(2);
 
 
                         }
@@ -529,7 +547,7 @@ public class NormalTagInfo extends AppCompatActivity {
                 Toast.makeText(NormalTagInfo.this,"Success",Toast.LENGTH_SHORT).show();
 
                 //For verired 1, issue reported = 2
-                new UpdateTagColor(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(reportType);
+                new UpdateTagStatusinRoom(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(reportType);
 
             }
         }, new Response.ErrorListener() {
@@ -566,11 +584,11 @@ public class NormalTagInfo extends AppCompatActivity {
 
     }
 
-    class UpdateTagColor extends AsyncTask<Integer,Void,Void> {
+    class UpdateTagStatusinRoom extends AsyncTask<Integer,Void,Void> {
 
         private final AreaTagTableDao areaTagTableDao;
 
-        public UpdateTagColor(BeatPoliceDb instance) {
+        public UpdateTagStatusinRoom(BeatPoliceDb instance) {
             areaTagTableDao = instance.getAreaTagTableDao();
 
         }
@@ -587,6 +605,58 @@ public class NormalTagInfo extends AppCompatActivity {
             super.onPostExecute(aVoid);
             onBackPressed();
         }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_tag_hisory,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id){
+            case R.id.history:
+                Intent i = new Intent(NormalTagInfo.this,ReportHistory.class);
+                i.putExtra("tagId",mTagDeails.getId());
+                startActivity(i);
+                return true;
+
+        }
+        return false;
+    }
+
+    private boolean checkAllotmentTime() {
+
+        LoginSessionManager session = new LoginSessionManager(NormalTagInfo.this);
+        String aTime = session.getAllotmentDetails().get(KEY_A_TIME);
+
+        String[] s2;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s2 = aTime.split(",");
+
+            sTime = Long.valueOf(s2[0]);
+            eTime = Long.valueOf(s2[1]);
+
+        }catch (Exception e){
+            Log.e(TAG,"Exception cought 2");
+        }
+
+        long currUnixTime = System.currentTimeMillis()/1000L;
+
+
+        if( ! (currUnixTime >= sTime && currUnixTime <= eTime ))
+            return false;
+
+
+        return true;
+
     }
 }
 

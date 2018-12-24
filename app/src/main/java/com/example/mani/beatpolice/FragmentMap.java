@@ -180,6 +180,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             public void onClick(View v) {
                 //new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
+                saveTagsToRoom();
             }
         });
 
@@ -191,8 +192,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             return;
         }
 
-        // Fetching all the tags if are is alloted
+        // Fetching all the tags if area is alloted
+        Log.e(TAG,"called : FetchTagsFromRoom");
         new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
+
 
         Log.e(TAG,"Beat area is allocated");
         mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
@@ -242,12 +245,12 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                 Log.e(TAG,"marker clicked "+marker.getPosition());
 
-                boolean isTimeAlloted = checkAllotmentTime();
-
-                if(!isTimeAlloted) {
-                    Log.e(TAG,"You don't have permisssion to report now");
-                    return false;
-                }
+//                boolean isTimeAlloted = checkAllotmentTime();
+//
+//                if(!isTimeAlloted) {
+//                    Log.e(TAG,"You don't have permisssion to report now");
+//                    return false;
+//                }
 
 
 
@@ -352,6 +355,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         // Add tags of alloted area to room database
+        Log.e(TAG,"called : SaveTagToRoom");
         new SaveTagToRoom(BeatPoliceDb.getInstance(mActivity)).execute(areaTagTableList);
 
 
@@ -406,8 +410,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     }
 
                     if(mSession.isAlloted()) {
-                        Log.e(TAG,"check :- session is allloted");
-                        saveTagsToRoom();
+//                        Log.e(TAG,"check :- session is allloted");
+//                        saveTagsToRoom();
                     }
 
                     //All tags are treated outside if area is not alloted
@@ -438,13 +442,27 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
+    /*
+        All tags are treated outside if area is not alloted
+     */
     private void addOutsideTagsToMap(List<Tag> tagList){
 
         Log.e(TAG,"called : addOutsideTagsToMap");
 
+        int areaId = -5484246; //A random number
+
+        if(mSession.isAlloted()) {
+           areaId = Integer.parseInt(mSession.getAllotmentDetails().get(KEY_A_ID));
+        }
+
         for(int i=0;i<tagList.size();i++){
 
             Tag tagDetails = tagList.get(i);
+
+            //So that only outside marker is marked is area is alloted
+            if(tagDetails.getAId() == areaId)
+                continue;
+
             String coord   = tagDetails.getCoord();
             String[] s;
             try {
@@ -475,6 +493,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         if(shouldExecuteOnResume) {
             Log.e(TAG, "called : onResume");
+            Log.e(TAG,"called : FetchTagsFromRoom");
             new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         }
 
@@ -501,6 +520,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     if(rc <= 0){
                         Log.e(TAG,"fetchAllotmentDetails : "+mess);
                         mSession.clearAllotedArea();
+                        new ClearAreaTagTable(BeatPoliceDb.getInstance(mActivity)).execute();
                         return;
                     }
                     //Pick the last alloted area (more than one alloted area may be there)
@@ -542,7 +562,57 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
+    private void showTagInsideArea() {
 
+        Log.e(TAG,"called : showTagInsideArea");
+
+        for(int i=0;i<mAreaTagList.size();i++){
+
+            AreaTagTable tagDetails = mAreaTagList.get(i);
+            String coord            = tagDetails.getCoord();
+            String[] s;
+            try {
+                s = coord.split(",");
+
+                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
+
+                Drawable drawable = null;
+
+                if(tagDetails.getTagType() == 1) {
+
+                    int tagStatus = tagDetails.getStatus();
+
+                    switch (tagStatus){
+                        case 0 : drawable = getResources().getDrawable(R.drawable.mss_inside_unvisited); break;
+                        case 1 : drawable = getResources().getDrawable(R.drawable.mss_ok); break;
+                        case 2 : drawable = getResources().getDrawable(R.drawable.mss_issue); break;
+                    }
+                }
+
+                else {
+
+                    int tagStatus = tagDetails.getStatus();
+                    switch (tagStatus){
+                        case 0 : drawable = getResources().getDrawable(R.drawable.marker_inside_unvisited); break;
+                        case 1 : drawable = getResources().getDrawable(R.drawable.marker_ok); break;
+                        case 2 : drawable = getResources().getDrawable(R.drawable.marker_issue); break;
+                    }
+                }
+
+                Bitmap bitmap = drawableToBitmap(drawable);
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(latLng)
+                        .title(tagDetails.getName())
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                mMap.addMarker(markerOptions);
+
+
+            }catch (Exception e) {
+                Log.e(TAG,"Exception cought 3");
+            }
+        }
+
+    }
 
 
     /*-------------------------------------Supporting Functions-----------------------------------------------*/
@@ -715,7 +785,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         private final AreaTagTableDao areaTagTableDao;
 
-
         public SaveTagToRoom(BeatPoliceDb instance) {
             areaTagTableDao = instance.getAreaTagTableDao();
         }
@@ -734,7 +803,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            //showTagInsideArea();
+            showTagInsideArea();
         }
     }
 
@@ -763,57 +832,28 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    class ClearAreaTagTable extends AsyncTask<Void,Void,Void> {
 
-    private void showTagInsideArea() {
+        private final AreaTagTableDao areaTagTableDao;
 
-        Log.e(TAG,"called : showTagInsideArea");
-
-        for(int i=0;i<mAreaTagList.size();i++){
-
-            AreaTagTable tagDetails = mAreaTagList.get(i);
-            String coord            = tagDetails.getCoord();
-            String[] s;
-            try {
-                s = coord.split(",");
-
-                LatLng latLng = new LatLng(Double.valueOf(s[0]),Double.valueOf(s[1]) );
-
-                Drawable drawable = null;
-
-                if(tagDetails.getTagType() == 1) {
-
-                    int tagStatus = tagDetails.getStatus();
-
-                    switch (tagStatus){
-                        case 0 : drawable = getResources().getDrawable(R.drawable.mss_inside_unvisited); break;
-                        case 1 : drawable = getResources().getDrawable(R.drawable.mss_ok); break;
-                        case 2 : drawable = getResources().getDrawable(R.drawable.mss_issue); break;
-                    }
-                }
-
-                else {
-
-                    int tagStatus = tagDetails.getStatus();
-                    switch (tagStatus){
-                        case 0 : drawable = getResources().getDrawable(R.drawable.marker_inside_unvisited); break;
-                        case 1 : drawable = getResources().getDrawable(R.drawable.marker_ok); break;
-                        case 2 : drawable = getResources().getDrawable(R.drawable.marker_issue); break;
-                    }
-                }
-
-                Bitmap bitmap = drawableToBitmap(drawable);
-                MarkerOptions markerOptions = new MarkerOptions()
-                        .position(latLng)
-                        .title(tagDetails.getName())
-                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                mMap.addMarker(markerOptions);
-
-
-            }catch (Exception e) {
-                Log.e(TAG,"Exception cought 3");
-            }
+        public ClearAreaTagTable(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
         }
 
+        @Override
+        protected Void doInBackground(Void... voids) {
+            areaTagTableDao.deleteAll();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            //showTagInsideArea();
+        }
     }
+
+
+
 
 }

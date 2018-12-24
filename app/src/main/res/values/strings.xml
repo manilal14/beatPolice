@@ -24,4 +24,5 @@
     <string name="cancel">Cancel</string>
     <string name="normal_tag">Normal Tag</string>
     <string name="senior_citizen">Senior citizen</string>
+    <string name="permission_denied">Permission denied</string>
 </resources>

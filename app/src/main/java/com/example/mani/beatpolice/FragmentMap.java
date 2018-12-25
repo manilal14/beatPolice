@@ -24,7 +24,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -174,16 +173,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         mMap.getUiSettings().setMapToolbarEnabled(false);
 
         //Fetching all the tags from database
-
-        ImageView refresh = mRootView.findViewById(R.id.refresh);
-        refresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
-                saveTagsToRoom();
-            }
-        });
-
         fetchAllTagsFromDatabase();
 
         if(!mSession.isAlloted()) {
@@ -244,15 +233,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                  */
 
                 Log.e(TAG,"marker clicked "+marker.getPosition());
-
-//                boolean isTimeAlloted = checkAllotmentTime();
-//
-//                if(!isTimeAlloted) {
-//                    Log.e(TAG,"You don't have permisssion to report now");
-//                    return false;
-//                }
-
-
 
                 LatLng latLng     = marker.getPosition();
                 String clickedLoc = latLng.latitude+","+latLng.longitude;
@@ -410,8 +390,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     }
 
                     if(mSession.isAlloted()) {
-//                        Log.e(TAG,"check :- session is allloted");
-//                        saveTagsToRoom();
+                        if(!mSession.isSavedToRoom()){
+                            saveTagsToRoom();
+                            mSession.setSavedToRoom();
+                        }
                     }
 
                     //All tags are treated outside if area is not alloted

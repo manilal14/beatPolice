@@ -25,4 +25,10 @@
     <string name="normal_tag">Normal Tag</string>
     <string name="senior_citizen">Senior citizen</string>
     <string name="permission_denied">Permission denied</string>
+    <string name="both_fields_">Both fields are required</string>
+    <string name="name_and_mobile_">Name and mobile are required</string>
+    <string name="enter_valid_">Enter valid phone number</string>
+    <string name="enter_valid_neighbour_">Enter valid neighbour number</string>
+    <string name="add_neighbour_">Add neighbour name first</string>
+    <string name="image_is_">Image is required</string>
 </resources>

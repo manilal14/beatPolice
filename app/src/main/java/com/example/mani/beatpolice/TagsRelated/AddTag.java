@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -29,6 +30,9 @@ import android.widget.Toast;
 
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
+import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
@@ -36,6 +40,9 @@ import net.gotev.uploadservice.ServerResponse;
 import net.gotev.uploadservice.UploadInfo;
 import net.gotev.uploadservice.UploadNotificationConfig;
 import net.gotev.uploadservice.UploadStatusDelegate;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,12 +66,23 @@ public class AddTag extends AppCompatActivity {
     private String mImagePath;
     private File file;
     private Uri fileUri;
+    private String mImageName;
 
     private ProgressDialog mProgressDialog;
     private LoginSessionManager mSession;
 
 
 
+    // These are for new tag to be inserted
+    private int t_aId;
+    private String  t_coord;
+    private int t_tagType;
+    private String t_name;
+    private String t_des;
+    private String t_phone;
+    private String t_gender;
+    private String t_n_name;
+    private String t_n_phone;
 
 
     @Override
@@ -144,8 +162,9 @@ public class AddTag extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
-                        file = new File(AddTag.this.getExternalCacheDir(),
-                                String.valueOf(System.currentTimeMillis()) + ".jpg");
+                        mImageName = String.valueOf(System.currentTimeMillis()) + ".jpg";
+
+                        file = new File(AddTag.this.getExternalCacheDir(), mImageName);
                         fileUri = Uri.fromFile(file);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
@@ -159,6 +178,7 @@ public class AddTag extends AppCompatActivity {
             public void onClick(View v) {
 
                 int tagType = spinnerTagType.getSelectedItemPosition();
+
 
                 EditText et_name    = findViewById(R.id.name);
                 EditText et_des     = findViewById(R.id.description);
@@ -182,37 +202,56 @@ public class AddTag extends AppCompatActivity {
                     des  = et_des.getText().toString();
 
                     if(name.equals("") ||des.equals("")){
-                        Toast.makeText(AddTag.this,"Both field are required",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddTag.this,getString(R.string.both_fields_),Toast.LENGTH_SHORT).show();
                         return;
                     }
+
                 }
 
                 if(tagType == 1){
-
                     name  = et_name.getText().toString();
                     phone = et_phone.getText().toString();
 
                     if(name.equals("") || phone.equals("")){
-                        Toast.makeText(AddTag.this,"Name and mobile are required",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AddTag.this,getString(R.string.name_and_mobile_),Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if(phone.length()!=10){
+                        Toast.makeText(AddTag.this,getString(R.string.enter_valid_),Toast.LENGTH_SHORT).show();
                         return;
                     }
 
                     if(rFemale.isChecked())
-                        gender = "female";
+                        gender = getString(R.string.female);
                     else
-                        gender = "male";
+                        gender = getString(R.string.male);
 
                     n_name  = et_n_name.getText().toString();
                     n_phone = et_n_phone.getText().toString();
+
+                    if(!n_name.equals("")){
+                        if(!(n_phone.length()== 0 || n_phone.length() == 10)){
+                            Toast.makeText(AddTag.this,getString(R.string.enter_valid_neighbour_),Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+                    else {
+                        et_n_phone.setText("");
+                        Toast.makeText(AddTag.this,getString(R.string.add_neighbour_),Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+
+                if(mImagePath == null){
+                    Toast.makeText(AddTag.this,getString(R.string.image_is_),Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
                 uploadPicture(tagType,name,des,phone,gender,n_name,n_phone);
             }
         });
     }
-
-
-
 
     //On camera result
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
@@ -236,8 +275,6 @@ public class AddTag extends AppCompatActivity {
 
                 mImagePath = actualPath.getAbsolutePath();
 
-                Log.e(TAG, actualPath.toString());
-
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -253,19 +290,31 @@ public class AddTag extends AppCompatActivity {
         String policeId = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
         String aId      = mSession.getAllotmentDetails().get(KEY_A_ID);
 
-        String uploadUrl = BASE_URL + "add_tags.php/";
+        String UPLOAD_URL = BASE_URL + "add_tags.php/";
 
-        String lat = String.valueOf(mTaggedLocation.latitude);
+        final String lat = String.valueOf(mTaggedLocation.latitude);
         String lon = String.valueOf(mTaggedLocation.longitude);
+
+        //These are for new tag to be added
+        t_aId = Integer.parseInt(aId);
+        t_coord = lat+","+lon;
+        t_tagType = tagType;
+        t_name = name;
+        t_des = des;
+        t_phone = phone;
+        t_gender = gender;
+        t_n_name = n_name;
+        t_n_phone = n_phone;
+
+        Log.e(TAG,"imgPath = "+mImagePath);
 
         try {
 
             Toast.makeText(AddTag.this, "Started...", Toast.LENGTH_SHORT).show();
             Log.e(TAG, mImagePath);
-            new MultipartUploadRequest(AddTag.this, uploadUrl)
+            new MultipartUploadRequest(AddTag.this, UPLOAD_URL)
 
                     .addFileToUpload(mImagePath, "image")
-
 
                     .addParameter("p_id",String.valueOf(policeId))
                     .addParameter("a_id",String.valueOf(aId))
@@ -294,10 +343,9 @@ public class AddTag extends AppCompatActivity {
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
                             mProgressDialog.dismiss();
-                            Log.e("TAG1",serverResponse.toString());
-                            Log.e("TAG2",uploadInfo.toString());
+                            Log.e("TAG",serverResponse.getBodyAsString());
                             if(exception!=null)
-                                Log.e("TAG3",exception.toString());
+                                Log.e("TAG",exception.toString());
                             Toast.makeText(AddTag.this,"Error uploading",Toast.LENGTH_SHORT).show();
 
 
@@ -306,9 +354,34 @@ public class AddTag extends AppCompatActivity {
                         @Override
                         public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
                             mProgressDialog.dismiss();
-                            Log.e("TAG4", serverResponse.getBodyAsString());
-                            Toast.makeText(AddTag.this,"Uploading done",Toast.LENGTH_SHORT).show();
-                            finish();
+
+                            String response = serverResponse.getBodyAsString();
+                            Log.e(TAG,response);
+
+                            try {
+                                JSONArray jsonArray = new JSONArray(response);
+                                int picUploded = jsonArray.getJSONObject(0).getInt("pic_uploaded");
+                                if(picUploded == 1)
+                                    Toast.makeText(AddTag.this,"Uploading done",Toast.LENGTH_SHORT).show();
+
+                                int tagInserted = jsonArray.getJSONObject(1).getInt("tag_inserted");
+                                if(tagInserted == 1){
+                                    int lastTagId = jsonArray.getJSONObject(1).getInt("tag_id");
+                                    Log.e(TAG, "lastTagId="+lastTagId);
+                                    new AddTagToRoom(BeatPoliceDb.getInstance(AddTag.this)).execute(lastTagId);
+                                }
+
+
+
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                Log.e(TAG,"Exception cought : " + e.toString());
+                            }
+
+
+
+                            //finish();
 
                         }
 
@@ -355,6 +428,30 @@ public class AddTag extends AppCompatActivity {
             }
 
             break;
+        }
+    }
+
+    class AddTagToRoom extends AsyncTask<Integer,Void,Void> {
+
+        private final AreaTagTableDao areaTagTableDao;
+
+        public AddTagToRoom(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
+
+        }
+        @Override
+        protected Void doInBackground(Integer... integers) {
+
+            //Add tag here but have to fetch tag details first
+            AreaTagTable tag = new AreaTagTable(integers[0],t_aId,t_coord,t_tagType,t_name,t_des,t_phone,t_gender,t_n_name,t_n_phone,mImageName);
+            areaTagTableDao.insert(tag);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            onBackPressed();
         }
     }
 }

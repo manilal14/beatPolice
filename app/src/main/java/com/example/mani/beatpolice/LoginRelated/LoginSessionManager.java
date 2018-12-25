@@ -21,6 +21,7 @@ public class LoginSessionManager {
     private final String IS_LOGIN    = "IsLoggedIn";
 
     private final String IS_ALLOTED   = "IsAlloted";
+    private final String IS_SAVED_TO_ROOM   = "IsSavedToRoom";
 
     public static final String KEY_POLICE_ID  = "policeId";
     public static final String KEY_PASSWORD   = "password";
@@ -34,6 +35,7 @@ public class LoginSessionManager {
     public static final String KEY_AREA       = "aName";
     public static final String KEY_DES        = "aDes";
     public static final String KEY_COORD      = "aCoord";
+
 
     public LoginSessionManager(Context context){
         mCtx = context;
@@ -92,9 +94,19 @@ public class LoginSessionManager {
         return pref.getBoolean(IS_ALLOTED, false);
     }
 
+    public boolean isSavedToRoom(){
+        return pref.getBoolean(IS_SAVED_TO_ROOM, false);
+    }
+
+    public void setSavedToRoom(){
+        editor.putBoolean(IS_SAVED_TO_ROOM,true);
+        editor.commit();
+    }
+
     public void clearAllotedArea(){
 
         editor.putBoolean(IS_ALLOTED,false);
+        editor.putBoolean(IS_SAVED_TO_ROOM,false);
 
         editor.putString(KEY_ALLOT_ID,"");
         editor.putString(KEY_A_ID,"");
@@ -102,6 +114,8 @@ public class LoginSessionManager {
         editor.putString(KEY_AREA,"");
         editor.putString(KEY_DES,"");
         editor.putString(KEY_COORD,"");
+
+
         editor.commit();
     }
 

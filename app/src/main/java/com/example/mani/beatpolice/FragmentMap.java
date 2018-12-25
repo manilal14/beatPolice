@@ -120,6 +120,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         shouldExecuteOnResume = false;
 
+
+
         Log.e(TAG, "Called : onCreate");
         mActivity.getSupportActionBar().hide();
         mSession = new LoginSessionManager(getActivity());
@@ -420,7 +422,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
@@ -502,6 +504,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     if(rc <= 0){
                         Log.e(TAG,"fetchAllotmentDetails : "+mess);
                         mSession.clearAllotedArea();
+                        mActivity.stopService(new Intent(mActivity, MyService.class));
                         new ClearAreaTagTable(BeatPoliceDb.getInstance(mActivity)).execute();
                         return;
                     }
@@ -516,6 +519,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     String a_coord = jsonObject.getString("coord");
 
                     mSession.saveAllotmentDetails(id,a_id,a_time,a_name,a_des,a_coord);
+                    mActivity.startService(new Intent(mActivity, MyService.class));
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -540,7 +544,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 

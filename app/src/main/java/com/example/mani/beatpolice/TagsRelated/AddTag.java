@@ -371,9 +371,6 @@ public class AddTag extends AppCompatActivity {
                                     new AddTagToRoom(BeatPoliceDb.getInstance(AddTag.this)).execute(lastTagId);
                                 }
 
-
-
-
                             } catch (JSONException e) {
                                 e.printStackTrace();
                                 Log.e(TAG,"Exception cought : " + e.toString());

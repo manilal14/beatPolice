@@ -65,6 +65,8 @@
             android:label="Report History"
             android:screenOrientation="portrait"/>
 
+        <service android:name=".MyService" android:process=":my_service" />
+
     </application>
 
 </manifest>

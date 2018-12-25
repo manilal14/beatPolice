@@ -150,6 +150,11 @@ public class SSTagInfo extends AppCompatActivity {
                     return;
                 }
 
+                if(mTagDeails.getStatus() != 0){
+                    Toast.makeText(SSTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 sendReportWithoutImage(0,"Ok",1,1);
             }
         });
@@ -410,7 +415,7 @@ public class SSTagInfo extends AppCompatActivity {
 
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(SSTagInfo.this).addToRequestQueue(stringRequest);
     }
 
@@ -653,7 +658,7 @@ public class SSTagInfo extends AppCompatActivity {
             }
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(SSTagInfo.this).addToRequestQueue(stringRequest);
 
     }

@@ -153,6 +153,9 @@ public class LoginSessionManager {
         editor.putString(KEY_DES,aDes);
         editor.putString(KEY_COORD,aCoord);
 
+
+
+
         editor.commit();
     }
 

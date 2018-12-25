@@ -121,8 +121,6 @@ public class NormalTagInfo extends AppCompatActivity {
         mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,mTagDeails.getId() +"");
 
-
-
         mIssueList = new ArrayList<>();
         mProgressDialog = new ProgressDialog(NormalTagInfo.this);
         mProgressDialog.setMessage("Uploading....");
@@ -154,6 +152,13 @@ public class NormalTagInfo extends AppCompatActivity {
                     Toast.makeText(NormalTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                if(mTagDeails.getStatus() != 0){
+                    Toast.makeText(NormalTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
                sendReportWithoutImage(0,"Ok",1,1);
             }
         });
@@ -385,7 +390,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(NormalTagInfo.this).addToRequestQueue(stringRequest);
     }
 
@@ -546,7 +551,7 @@ public class NormalTagInfo extends AppCompatActivity {
                 Log.e(TAG,"------" + response);
                 Toast.makeText(NormalTagInfo.this,"Success",Toast.LENGTH_SHORT).show();
 
-                //For verired 1, issue reported = 2
+                //For verifiacation 1, issue reported = 2
                 new UpdateTagStatusinRoom(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(reportType);
 
             }
@@ -579,7 +584,7 @@ public class NormalTagInfo extends AppCompatActivity {
             }
         };
 
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(NormalTagInfo.this).addToRequestQueue(stringRequest);
 
     }

@@ -111,6 +111,8 @@ public class SSTagInfo extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
 
+    int flag = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -150,7 +152,7 @@ public class SSTagInfo extends AppCompatActivity {
                     return;
                 }
 
-                if(mTagDeails.getStatus() != 0){
+                if(mTagDeails.getStatus() != 0 || flag == 1){
                     Toast.makeText(SSTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -166,6 +168,11 @@ public class SSTagInfo extends AppCompatActivity {
                 boolean isTimeAlloted = checkAllotmentTime();
                 if(!isTimeAlloted) {
                     Toast.makeText(SSTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if(mTagDeails.getStatus() != 0 || flag==1){
+                    Toast.makeText(SSTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -288,8 +295,10 @@ public class SSTagInfo extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
+                        String allotId = new LoginSessionManager(SSTagInfo.this).getAllotmentDetails().get(KEY_ALLOT_ID);
+
                         File file = new File(SSTagInfo.this.getExternalCacheDir(),
-                                String.valueOf(System.currentTimeMillis()) + ".jpg");
+                                allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
                         mFileUri = Uri.fromFile(file);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
@@ -544,7 +553,7 @@ public class SSTagInfo extends AppCompatActivity {
         String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
 
         try {
-
+            mProgressDialog.show();
             new MultipartUploadRequest(SSTagInfo.this,REPORT_ISSUE_URL)
 
                     .addFileToUpload(imagePath, "image")
@@ -561,9 +570,7 @@ public class SSTagInfo extends AppCompatActivity {
                     .setMaxRetries(2)
                     .setDelegate(new UploadStatusDelegate() {
                         @Override
-                        public void onProgress(Context context, UploadInfo uploadInfo) {
-                            mProgressDialog.show();
-                        }
+                        public void onProgress(Context context, UploadInfo uploadInfo){}
 
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
@@ -582,11 +589,8 @@ public class SSTagInfo extends AppCompatActivity {
                             else {
                                 message = "verified";
                             }
-
                             Toast.makeText(SSTagInfo.this,message,Toast.LENGTH_SHORT).show();
                             new UpdateTagColor(BeatPoliceDb.getInstance(SSTagInfo.this)).execute(2);
-
-
                         }
 
                         @Override
@@ -602,9 +606,6 @@ public class SSTagInfo extends AppCompatActivity {
             mProgressDialog.dismiss();
             Log.e(TAG, e.toString());
             Toast.makeText(SSTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
-            finish();
-
-
         }
 
     }
@@ -682,7 +683,10 @@ public class SSTagInfo extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            onBackPressed();
+            //flag = 1;
+            if(!SSTagInfo.this.isDestroyed()){
+                onBackPressed();
+            }
         }
     }
 

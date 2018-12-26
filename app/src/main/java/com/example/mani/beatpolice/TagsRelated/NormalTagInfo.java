@@ -28,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -107,11 +108,9 @@ public class NormalTagInfo extends AppCompatActivity {
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mCurrentLatlng;
-
     private ProgressDialog mProgressDialog;
 
-
-
+    int flag = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,13 +152,11 @@ public class NormalTagInfo extends AppCompatActivity {
                     return;
                 }
 
-                if(mTagDeails.getStatus() != 0){
+                if(mTagDeails.getStatus() != 0 || flag == 1){
                     Toast.makeText(NormalTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-
-               sendReportWithoutImage(0,"Ok",1,1);
+                sendReportWithoutImage(0,"Ok",1,1);
             }
         });
 
@@ -169,6 +166,10 @@ public class NormalTagInfo extends AppCompatActivity {
                 boolean isTimeAlloted = checkAllotmentTime();
                 if(!isTimeAlloted) {
                     Toast.makeText(NormalTagInfo.this,getString(R.string.permission_denied),Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(mTagDeails.getStatus() != 0 || flag == 1){
+                    Toast.makeText(NormalTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
                     return;
                 }
                 mImagePath = null;
@@ -265,8 +266,10 @@ public class NormalTagInfo extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
+                        String allotId = new LoginSessionManager(NormalTagInfo.this).getAllotmentDetails().get(KEY_ALLOT_ID);
+
                         File file = new File(NormalTagInfo.this.getExternalCacheDir(),
-                                String.valueOf(System.currentTimeMillis()) + ".jpg");
+                                allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
                         mFileUri = Uri.fromFile(file);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
@@ -355,7 +358,6 @@ public class NormalTagInfo extends AppCompatActivity {
             public void onResponse(String response) {
 
                 Log.e(TAG,"Issues : "+ response);
-
 
                 try {
                     JSONArray jsonArray = new JSONArray(response);
@@ -470,7 +472,7 @@ public class NormalTagInfo extends AppCompatActivity {
         String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
 
         try {
-
+            mProgressDialog.show();
             new MultipartUploadRequest(NormalTagInfo.this,REPORT_ISSUE_URL)
 
                     .addFileToUpload(imagePath, "image")
@@ -487,9 +489,7 @@ public class NormalTagInfo extends AppCompatActivity {
                     .setMaxRetries(2)
                     .setDelegate(new UploadStatusDelegate() {
                         @Override
-                        public void onProgress(Context context, UploadInfo uploadInfo) {
-                            mProgressDialog.show();
-                        }
+                        public void onProgress(Context context, UploadInfo uploadInfo) { }
 
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
@@ -500,7 +500,6 @@ public class NormalTagInfo extends AppCompatActivity {
                         @Override
                         public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
                             mProgressDialog.dismiss();
-
                             String message ="";
                             if(checkValue == 0){
                                 message = "Issue Reported";
@@ -523,9 +522,12 @@ public class NormalTagInfo extends AppCompatActivity {
                         }
                     })
                     .startUpload();
+                    Toast.makeText(NormalTagInfo.this,"stated..",Toast.LENGTH_SHORT).show();
+                    //To lock screen
 
         } catch (Exception e) {
             mProgressDialog.dismiss();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             Log.e(TAG, e.toString());
             Toast.makeText(NormalTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
             finish();
@@ -608,7 +610,10 @@ public class NormalTagInfo extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            onBackPressed();
+            //flag = 1;
+            if(!NormalTagInfo.this.isDestroyed()){
+                onBackPressed();
+            }
         }
     }
 

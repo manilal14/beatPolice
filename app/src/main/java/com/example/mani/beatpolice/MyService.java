@@ -25,6 +25,7 @@ import java.util.Map;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 
 public class MyService extends Service {
 
@@ -47,15 +48,23 @@ public class MyService extends Service {
         public void onLocationChanged(Location location)
         {
             Log.e(TAG, "onLocationChanged: " + location);
-            Toast.makeText(getApplicationContext(),location.getLatitude()+","+ location.getLongitude(),Toast.LENGTH_SHORT).show();
+            mLastLocation.set(location);
 
             String lat = String.valueOf(location.getLatitude());
             String lon = String.valueOf(location.getLongitude());
 
-            if((!lat.equals("") || lon.equals("")))
-                sendToDatabase(lat,lon);
+            boolean isAlloted = new LoginSessionManager(getApplicationContext()).isAlloted();
 
-            mLastLocation.set(location);
+            if(isAlloted){
+                if(checkAllotmentTime()){
+                    if((!lat.equals("") || lon.equals("")))
+                        Toast.makeText(getApplicationContext(),location.getLatitude()+","+ location.getLongitude(),Toast.LENGTH_SHORT).show();
+                        sendToDatabase(lat,lon);
+
+                }
+            }
+
+
         }
 
         @Override
@@ -152,8 +161,7 @@ public class MyService extends Service {
 
         final String allotId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_ALLOT_ID);
 
-        String unixTime = String.valueOf(System.currentTimeMillis() / 1000L);
-        final String pos = "[" +latitude+","+longitude+","+unixTime+"]";
+        final String pos = "[" +latitude+","+longitude+",";
 
         String SEND_URL = BASE_URL + "sent_periodic_location.php";
 
@@ -179,6 +187,35 @@ public class MyService extends Service {
 
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(3*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+    }
+
+    private boolean checkAllotmentTime() {
+
+        String aTime = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_A_TIME);
+
+        String[] s2;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s2 = aTime.split(",");
+
+            sTime = Long.valueOf(s2[0]);
+            eTime = Long.valueOf(s2[1]);
+
+        }catch (Exception e){
+            Log.e(TAG,"Exception cought 2");
+        }
+
+        long currUnixTime = System.currentTimeMillis()/1000L;
+
+
+        if( ! (currUnixTime >= sTime && currUnixTime <= eTime ))
+            return false;
+
+
+        return true;
+
     }
 }
 

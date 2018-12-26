@@ -50,6 +50,7 @@ import java.util.List;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.KEY_LATLNG;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
@@ -162,7 +163,9 @@ public class AddTag extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
-                        mImageName = String.valueOf(System.currentTimeMillis()) + ".jpg";
+                        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
+
+                        mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
 
                         file = new File(AddTag.this.getExternalCacheDir(), mImageName);
                         fileUri = Uri.fromFile(file);
@@ -310,8 +313,7 @@ public class AddTag extends AppCompatActivity {
 
         try {
 
-            Toast.makeText(AddTag.this, "Started...", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, mImagePath);
+            mProgressDialog.show();
             new MultipartUploadRequest(AddTag.this, UPLOAD_URL)
 
                     .addFileToUpload(mImagePath, "image")
@@ -335,10 +337,7 @@ public class AddTag extends AppCompatActivity {
                     .setMaxRetries(10)
                     .setDelegate(new UploadStatusDelegate() {
                         @Override
-                        public void onProgress(Context context, UploadInfo uploadInfo) {
-                            mProgressDialog.show();
-
-                        }
+                        public void onProgress(Context context, UploadInfo uploadInfo) {}
 
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
@@ -361,8 +360,10 @@ public class AddTag extends AppCompatActivity {
                             try {
                                 JSONArray jsonArray = new JSONArray(response);
                                 int picUploded = jsonArray.getJSONObject(0).getInt("pic_uploaded");
-                                if(picUploded == 1)
-                                    Toast.makeText(AddTag.this,"Uploading done",Toast.LENGTH_SHORT).show();
+                                if(picUploded == 1) {
+                                    Toast.makeText(AddTag.this, "Uploading done", Toast.LENGTH_SHORT).show();
+
+                                }
 
                                 int tagInserted = jsonArray.getJSONObject(1).getInt("tag_inserted");
                                 if(tagInserted == 1){
@@ -377,9 +378,6 @@ public class AddTag extends AppCompatActivity {
                             }
 
 
-
-                            //finish();
-
                         }
 
                         @Override
@@ -390,6 +388,7 @@ public class AddTag extends AppCompatActivity {
                         }
                     })
                     .startUpload();
+
 
         } catch (Exception e) {
             mProgressDialog.dismiss();
@@ -412,12 +411,7 @@ public class AddTag extends AppCompatActivity {
             case MY_CAMERA_PERMISSION_CODE:{
 
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
-                    Intent cameraIntent = new
-                            Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-
-                    startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                    onActivityResult(requestCode,requestCode,cameraIntent);
+                    Log.e(TAG,"camera permission granted");
 
                 } else {
                     Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
@@ -448,7 +442,11 @@ public class AddTag extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            onBackPressed();
+
+            if(!AddTag.this.isDestroyed()){
+                onBackPressed();
+            }
+
         }
     }
 }

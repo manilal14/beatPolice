@@ -92,7 +92,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
 
     private static final float GPS_ZOOM =18f;
-    private static final float DEFAULT_ZOOM = 22f;
     private Boolean mLocationPermissionsGranted = false;
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
@@ -120,14 +119,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         shouldExecuteOnResume = false;
 
-
-
         Log.e(TAG, "Called : onCreate");
         mActivity.getSupportActionBar().hide();
         mSession = new LoginSessionManager(getActivity());
 
         mAreaTagList = new ArrayList<>();
-
         mTagList = new ArrayList<>();
 
         fetchAllotmentDetails();
@@ -173,24 +169,23 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMapToolbarEnabled(false);
-
-        //Fetching all the tags from database
+        
         fetchAllTagsFromDatabase();
 
         if(!mSession.isAlloted()) {
-            Log.e(TAG,"Beat area is not allocated");
-            mRootView.findViewById(R.id.marker_imageview).setVisibility(View.GONE);
+            Log.e(TAG,"called : Session not alloted");
             return;
         }
 
-        // Fetching all the tags if area is alloted
+        if(checkAllotmentTime())
+            mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
+        
         Log.e(TAG,"called : FetchTagsFromRoom");
         new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
-
-
         Log.e(TAG,"Beat area is allocated");
-        mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
 
+        
+        setPolygon();
 
         // Set up polygon
         mPolygonOption  = new PolygonOptions();
@@ -284,9 +279,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                 Log.e(TAG,"inside area alloted");
 
-
-                boolean isTimeAlloted = checkAllotmentTime();
-                if(!isTimeAlloted) {
+                if(!checkAllotmentTime()) {
                     Log.e(TAG,"You don't have permisssion to tag now2");
                     return;
                 }
@@ -296,6 +289,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         });
 
 
+    }
+
+    private void setPolygon() {
     }
 
     private void saveTagsToRoom() {
@@ -643,6 +639,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         if (task.isSuccessful()) {
                             Location currentLocation = (Location) task.getResult();
                             mMyLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+                            Log.e(TAG,"myLocation : "+mMyLocation);
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
 
                         } else {

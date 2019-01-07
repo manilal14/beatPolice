@@ -15,6 +15,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -99,6 +102,7 @@ public class AddTag extends AppCompatActivity {
 
         mProgressDialog = new ProgressDialog(AddTag.this);
         mProgressDialog.setMessage("Please Wait...");
+        mProgressDialog.setCancelable(false);
 
         mSession = new LoginSessionManager(AddTag.this);
 
@@ -159,7 +163,16 @@ public class AddTag extends AppCompatActivity {
                         != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA},
                             MY_CAMERA_PERMISSION_CODE);
-                } else {
+                }
+                else if (ContextCompat.checkSelfPermission(AddTag.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(AddTag.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                }
+
+
+                else {
 
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -170,9 +183,9 @@ public class AddTag extends AppCompatActivity {
                         mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
 
                         file = new File(AddTag.this.getExternalCacheDir(), mImageName);
-                        fileUri = Uri.fromFile(file);
+                        fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
 
-                        //fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
+                        Log.e(TAG,"mFileUri "+fileUri.toString());
 
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
@@ -325,7 +338,7 @@ public class AddTag extends AppCompatActivity {
             mProgressDialog.show();
             new MultipartUploadRequest(AddTag.this, UPLOAD_URL)
 
-                    .addFileToUpload(mImagePath, "image")
+                    .addFileToUpload(String.valueOf(fileUri), "image")
 
                     .addParameter("p_id",String.valueOf(policeId))
                     .addParameter("a_id",String.valueOf(aId))

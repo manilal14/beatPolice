@@ -271,7 +271,7 @@ public class FragmentProfile extends Fragment {
                         @Override
                         public void onCompleted(Context context, UploadInfo uploadInfo, ServerResponse serverResponse) {
                             mSession.updateProfilePicName(p_id+".jpg");
-                            Toast.makeText(getActivity(),"Upload complete",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mActivity,"Upload complete",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -281,6 +281,7 @@ public class FragmentProfile extends Fragment {
                         }
                     })
                     .startUpload();
+                    Toast.makeText(mActivity,"Uploading in background....",Toast.LENGTH_SHORT).show();
 
         } catch (Exception exc) {
             Toast.makeText(mActivity, exc.getMessage(), Toast.LENGTH_SHORT).show();

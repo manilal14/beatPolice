@@ -9,14 +9,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -56,11 +54,7 @@ import com.example.mani.beatpolice.ReportHistory;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
 import net.gotev.uploadservice.ServerResponse;
@@ -82,6 +76,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TAG_PIC_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getDeviceLocation;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 
@@ -107,7 +102,7 @@ public class SSTagInfo extends AppCompatActivity {
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private Boolean mLocationPermissionsGranted = false;
-    private FusedLocationProviderClient mFusedLocationProviderClient;
+
 
     private LatLng mCurrentLatlng;
 
@@ -125,6 +120,7 @@ public class SSTagInfo extends AppCompatActivity {
 
         mProgressDialog = new ProgressDialog(SSTagInfo.this);
         mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.setCancelable(false);
 
         fetchIssueTypes();
 
@@ -133,8 +129,14 @@ public class SSTagInfo extends AppCompatActivity {
 
         if(!mLocationPermissionsGranted)
             getLocationPermission();
-        else
-            getDeviceLocation();
+        else {
+            try {
+                mCurrentLatlng = getDeviceLocation(SSTagInfo.this);
+            } catch (Exception e) {
+                Log.e(TAG, "Exception cought " + e);
+            }
+        }
+
 
     }
 
@@ -457,7 +459,12 @@ public class SSTagInfo extends AppCompatActivity {
                     COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
                 mLocationPermissionsGranted = true;
-                getDeviceLocation();
+                try{
+                    mCurrentLatlng = getDeviceLocation(SSTagInfo.this);
+                }catch (Exception e){
+                    Log.e(TAG,"Exception cought " + e);
+                }
+
 
             } else {
                 ActivityCompat.requestPermissions(this,
@@ -470,38 +477,39 @@ public class SSTagInfo extends AppCompatActivity {
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
-    private void getDeviceLocation()  {
 
-        Log.e(TAG, "getDeviceLocation");
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+//    private void getDeviceLocation()  {
+//
+//        Log.e(TAG, "getDeviceLocation");
+//        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+//
+//        LocationRequest.create()
+//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+//                .setInterval(10 * 1000)
+//                .setFastestInterval(1 * 1000);
+//
+//        GPSTracker tracker = new GPSTracker(SSTagInfo.this);
+//
+//        if (!tracker.canGetLocation()) {
+//            tracker.showSettingsAlert();
+//        }
+//
+//        else
+//        {
+//            try{
+//                mCurrentLatlng = new LatLng(tracker.getLatitude(),tracker.getLongitude());
+//                Log.e(TAG,"myLocation : "+mCurrentLatlng);
+//            }catch (Exception e){
+//                Log.e(TAG,"Exception couught "+e);
+//                Toast.makeText(SSTagInfo.this,"Please turn on gps first",Toast.LENGTH_SHORT).show();
+//            }
+//
+//
+//        }
+//
+//    }
 
-        try {
-            if (mLocationPermissionsGranted) {
 
-                final Task location = mFusedLocationProviderClient.getLastLocation();
-                location.addOnCompleteListener(new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-
-                        if (task.isSuccessful()) {
-                            Location location = (Location) task.getResult();
-                            mCurrentLatlng = new LatLng(location.getLatitude(), location.getLongitude());
-
-                            Log.e(TAG, "Current Location " + mCurrentLatlng);
-
-                        } else {
-                            Log.e(TAG, "Current Location can't be found");
-                        }
-                    }
-                });
-            }
-        } catch (SecurityException e) {
-            Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
-
-        }
-
-
-    }
     private boolean checkAllotmentTime() {
 
         LoginSessionManager session = new LoginSessionManager(SSTagInfo.this);
@@ -565,7 +573,14 @@ public class SSTagInfo extends AppCompatActivity {
         final String check = String.valueOf(checkValue);
         long currUnixTime = System.currentTimeMillis()/1000L;
         String time = String.valueOf(currUnixTime);
-        String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
+
+        String myLocation = "na";
+
+        if(mCurrentLatlng !=null){
+            myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
+        }
+
+
 
         try {
             mProgressDialog.show();
@@ -640,7 +655,13 @@ public class SSTagInfo extends AppCompatActivity {
         long currUnixTime = System.currentTimeMillis()/1000L;
         final String time = String.valueOf(currUnixTime);
 
-        final String myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
+
+        String myLocation = "na";
+
+        if(mCurrentLatlng !=null){
+            myLocation = String.valueOf(mCurrentLatlng.latitude) + "," + String.valueOf(mCurrentLatlng.longitude);
+        }
+        final String finalMyLocation = myLocation;
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, REPORT_ISSUE_URL, new Response.Listener<String>() {
             @Override
@@ -676,7 +697,7 @@ public class SSTagInfo extends AppCompatActivity {
                 params.put("issue_id",String.valueOf(issueType));
                 params.put("des",des);
                 params.put("time",time);
-                params.put("my_pos",myLocation);
+                params.put("my_pos", finalMyLocation);
 
 
 

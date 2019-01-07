@@ -648,62 +648,26 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 .setInterval(10 * 1000)        // 10 seconds, in milliseconds
                 .setFastestInterval(1 * 1000);
 
-        LatLng currentLocation = null;
-
         GPSTracker tracker = new GPSTracker(mActivity);
         if (!tracker.canGetLocation()) {
             tracker.showSettingsAlert();
-        } else {
-//            double latitude = tracker.getLatitude();
-//            double longitude = tracker.getLongitude();
+        }
 
-            currentLocation = new LatLng(tracker.getLatitude(),tracker.longitude);
-            Log.e(TAG,"myLocation : "+currentLocation);
+        else
+            {
 
-            if(currentLocation == null){
+            mMyLocation = new LatLng(tracker.getLatitude(),tracker.getLongitude());
+            Log.e(TAG,"myLocation found : "+mMyLocation);
+
+            if(mMyLocation == null){
                 Toast.makeText(mActivity,"Please turn on gps first",Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            mMyLocation = currentLocation;
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
 
 
         }
 
-
-
-//        try {
-//            if (mLocationPermissionsGranted) {
-//
-//                final Task location = mFusedLocationProviderClient.getLastLocation();
-//                //Log.e(TAG,"Task Location :"+location);
-//
-//                location.addOnCompleteListener(new OnCompleteListener() {
-//                    @Override
-//                    public void onComplete(@NonNull Task task) {
-//
-//                        if (task.isSuccessful()) {
-//                            Location currentLocation = (Location) task.getResult();
-//
-//                            if(currentLocation == null){
-//                                Log.e(TAG,"current location is null");
-//                                return;
-//                            }
-//
-//                            mMyLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-//                            Log.e(TAG,"myLocation : "+mMyLocation);
-//                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
-//
-//                        } else {
-//                            Log.e(TAG, "onComplete: current location is null");
-//                        }
-//                    }
-//                });
-//            }
-//        } catch (SecurityException e) {
-//            Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
-//        }
     }
 
     private boolean checkAllotmentTime() {

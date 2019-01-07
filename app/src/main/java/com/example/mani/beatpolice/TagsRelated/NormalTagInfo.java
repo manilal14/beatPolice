@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -122,7 +123,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
         mIssueList = new ArrayList<>();
         mProgressDialog = new ProgressDialog(NormalTagInfo.this);
-        mProgressDialog.setMessage("Uploading....");
+        mProgressDialog.setMessage("Please wait....");
 
         fetchIssueTypes();
 
@@ -236,8 +237,6 @@ public class NormalTagInfo extends AppCompatActivity {
 
         alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-
-
         final Spinner spinnerIssue  = mDialogView.findViewById(R.id.issue_title);
         LinearLayout llTakePhoto    = mDialogView.findViewById(R.id.take_photo);
         final EditText et_des       = mDialogView.findViewById(R.id.des);
@@ -261,7 +260,16 @@ public class NormalTagInfo extends AppCompatActivity {
                         != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA},
                             MY_CAMERA_PERMISSION_CODE);
-                } else {
+                }
+
+                else if (ContextCompat.checkSelfPermission(NormalTagInfo.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                        ActivityCompat.requestPermissions(NormalTagInfo.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                }
+
+                else {
 
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
@@ -270,9 +278,14 @@ public class NormalTagInfo extends AppCompatActivity {
 
                         File file = new File(NormalTagInfo.this.getExternalCacheDir(),
                                 allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
-                        mFileUri = Uri.fromFile(file);
-                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
-                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+
+                        mFileUri = FileProvider.getUriForFile(NormalTagInfo.this,"com.example.mani.beatpolice.provider",file);
+                        Log.e(TAG,"mFileUri "+mFileUri.toString());
+
+                        //mFileUri = Uri.fromFile(file);
+                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
+                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
+
                     }
                 }
 
@@ -292,62 +305,67 @@ public class NormalTagInfo extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                    int issueType = spinnerIssue.getSelectedItemPosition() + 1;
-                    String des    = et_des.getText().toString().trim();
+                int issueType = spinnerIssue.getSelectedItemPosition() + 1;
+                String des    = et_des.getText().toString().trim();
 
-                    if(des.equals("")){
-                        Toast.makeText(NormalTagInfo.this,"Write description",Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                if(des.equals("")){
+                    Toast.makeText(NormalTagInfo.this,"Write description",Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                    if(mImagePath != null)
-                        sendIssueWithImage(issueType,des,0,mImagePath);
-                    else {
-                        sendReportWithoutImage(issueType,des,0,2);
-                    }
+                if(mImagePath != null)
+                    sendIssueWithImage(issueType,des,0,mImagePath);
+                else {
+                    sendReportWithoutImage(issueType,des,0,2);
+                }
 
-                    alertDialog.dismiss();
+                alertDialog.dismiss();
 
             }
         });
 
         alertDialog.show();
 
-
     }
+
+
 
     //On camera result
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
 
         Log.e(TAG,"onActivityResult : called");
 
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+        if(requestCode != RESULT_CANCELED) {
 
-            Uri selectedImage = mFileUri;
-            String path       = mFileUri.getPath();
-            getContentResolver().notifyChange(selectedImage, null);
-            ContentResolver cr = getContentResolver();
+            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-            Bitmap bitmap;
-            File actualPath;
+                Uri selectedImage = mFileUri;
+                String path = mFileUri.getPath();
 
-            try {
-                bitmap = MediaStore.Images.Media
-                        .getBitmap(cr, selectedImage);
+                getContentResolver().notifyChange(selectedImage, null);
+                ContentResolver cr = getContentResolver();
 
-                actualPath = new File(path);
-                mImagePath = actualPath.getAbsolutePath();
+                Bitmap bitmap;
+                File actualPath;
 
-                ImageView imageView = mDialogView.findViewById(R.id.image);
-                imageView.setImageBitmap(bitmap);
+                try {
+                    bitmap = MediaStore.Images.Media
+                            .getBitmap(cr, selectedImage);
 
-                Log.e(TAG, "Actual path : " + actualPath.toString());
+                    actualPath = new File(path);
+                    mImagePath = actualPath.getAbsolutePath();
 
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-                e.printStackTrace();
+                    ImageView imageView = mDialogView.findViewById(R.id.image);
+                    imageView.setImageBitmap(bitmap);
+
+                    Log.e(TAG, "Actual path : " + mImagePath);
+
+                } catch (Exception e) {
+                    Log.e(TAG,"Exception :"+ e.getMessage());
+                    e.printStackTrace();
+                }
+
             }
-
         }
     }
 
@@ -475,7 +493,7 @@ public class NormalTagInfo extends AppCompatActivity {
             mProgressDialog.show();
             new MultipartUploadRequest(NormalTagInfo.this,REPORT_ISSUE_URL)
 
-                    .addFileToUpload(imagePath, "image")
+                    .addFileToUpload(String.valueOf(mFileUri), "image")
 
                     .addParameter("allot_id",allotId)
                     .addParameter("tag_id",tagId)
@@ -494,7 +512,12 @@ public class NormalTagInfo extends AppCompatActivity {
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
                             mProgressDialog.dismiss();
-                            Toast.makeText(NormalTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
+                            Log.e("asd1",uploadInfo.toString());
+                            if(serverResponse!=null)
+                                Log.e("asd",serverResponse.toString());
+                            if(exception!=null)
+                                Log.e("asd",exception.toString());
+                            Toast.makeText(NormalTagInfo.this,"Issue is not reported",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -522,7 +545,6 @@ public class NormalTagInfo extends AppCompatActivity {
                         }
                     })
                     .startUpload();
-                    Toast.makeText(NormalTagInfo.this,"stated..",Toast.LENGTH_SHORT).show();
                     //To lock screen
 
         } catch (Exception e) {
@@ -541,6 +563,7 @@ public class NormalTagInfo extends AppCompatActivity {
     private void sendReportWithoutImage(final int issueType, final String des, final int checkValue, final int reportType) {
 
         Log.e(TAG,"called : sendReportWithoutImage");
+        mProgressDialog.show();
 
         long currUnixTime = System.currentTimeMillis()/1000L;
         final String time = String.valueOf(currUnixTime);
@@ -550,17 +573,22 @@ public class NormalTagInfo extends AppCompatActivity {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, REPORT_ISSUE_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+
                 Log.e(TAG,"------" + response);
+                mProgressDialog.dismiss();
                 Toast.makeText(NormalTagInfo.this,"Success",Toast.LENGTH_SHORT).show();
 
                 //For verifiacation 1, issue reported = 2
                 new UpdateTagStatusinRoom(BeatPoliceDb.getInstance(NormalTagInfo.this)).execute(reportType);
 
+
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                mProgressDialog.dismiss();
                 Log.e(TAG,error.toString());
+                Toast.makeText(NormalTagInfo.this,error.toString(),Toast.LENGTH_SHORT).show();
             }
         }){
             @Override
@@ -580,8 +608,6 @@ public class NormalTagInfo extends AppCompatActivity {
                 params.put("time",time);
                 params.put("my_pos",myLocation);
 
-
-
                 return params;
             }
         };
@@ -597,7 +623,6 @@ public class NormalTagInfo extends AppCompatActivity {
 
         public UpdateTagStatusinRoom(BeatPoliceDb instance) {
             areaTagTableDao = instance.getAreaTagTableDao();
-
         }
 
 
@@ -668,6 +693,7 @@ public class NormalTagInfo extends AppCompatActivity {
         return true;
 
     }
+
 }
 
 

@@ -1,5 +1,7 @@
 package com.example.mani.beatpolice;
 
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -11,10 +13,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
+import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 
 public class HomePage extends AppCompatActivity  {
+
 
     private  String TAG = this.getClass().getSimpleName();
     Fragment mFragmentMap;
@@ -39,6 +44,8 @@ public class HomePage extends AppCompatActivity  {
             finish();
             return;
         }
+
+
 
         clickLister();
 
@@ -90,10 +97,10 @@ public class HomePage extends AppCompatActivity  {
         int id = item.getItemId();
 
         switch (id){
-            case R.id.logout: mSession.logout(); finish(); return true;
-//            case R.id.terminate:
-//                openDialogBox();
-//                return true;
+            case R.id.logout:
+                new ClearAreaTagTable(BeatPoliceDb.getInstance(HomePage.this)).execute();
+                break;
+
         }
         return false;
     }
@@ -116,6 +123,31 @@ public class HomePage extends AppCompatActivity  {
     public void setTheme(int resid) {
         super.setTheme(resid);
     }
+
+    class ClearAreaTagTable extends AsyncTask<Void,Void,Void> {
+
+        private final AreaTagTableDao areaTagTableDao;
+
+        public ClearAreaTagTable(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            areaTagTableDao.deleteAll();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mSession.logout();
+            stopService(new Intent(HomePage.this, MyService.class));
+            finish();
+        }
+    }
+
+
 
 
 }

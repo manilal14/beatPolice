@@ -57,11 +57,25 @@ public class MyService extends Service {
 
             if(isAlloted){
                 if(checkAllotmentTime()){
-                    if((!lat.equals("") || lon.equals("")))
-                        Toast.makeText(getApplicationContext(),location.getLatitude()+","+ location.getLongitude(),Toast.LENGTH_SHORT).show();
-                        sendToDatabase(lat,lon);
+                    if((!lat.equals("") || lon.equals(""))) {
+                        Log.e(TAG, "sending");
+                        Toast.makeText(getApplicationContext(), location.getLatitude() + "," + location.getLongitude(), Toast.LENGTH_SHORT).show();
+                        sendToDatabase(lat, lon);
+                    }
+                    else{
+                        Log.e(TAG,"lat is null");
+                    }
+
 
                 }
+                else {
+                    Log.e(TAG,"time is not in range");
+                }
+
+
+            }
+            else {
+                Log.e(TAG,"not alloted");
             }
 
 
@@ -85,9 +99,6 @@ public class MyService extends Service {
             Log.e(TAG, "onStatusChanged: " + provider);
         }
     }
-
-
-
     LocationListener[] mLocationListeners = new LocationListener[] {
             new LocationListener(LocationManager.GPS_PROVIDER),
             new LocationListener(LocationManager.NETWORK_PROVIDER)
@@ -174,6 +185,7 @@ public class MyService extends Service {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG,error.toString());
+                Toast.makeText(getApplicationContext(),"Problem sending location",Toast.LENGTH_SHORT).show();
             }
         }){
             @Override
@@ -192,6 +204,8 @@ public class MyService extends Service {
     private boolean checkAllotmentTime() {
 
         String aTime = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_A_TIME);
+
+        Log.e(TAG,aTime);
 
         String[] s2;
         long sTime = 0;

@@ -154,6 +154,7 @@ public class AddTag extends AppCompatActivity {
             public void onClick(View v) {
 
                 Log.e(TAG,"onCameraClick");
+
                 if (checkSelfPermission(Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA},
@@ -161,6 +162,7 @@ public class AddTag extends AppCompatActivity {
                 } else {
 
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
                         String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
@@ -169,6 +171,9 @@ public class AddTag extends AppCompatActivity {
 
                         file = new File(AddTag.this.getExternalCacheDir(), mImageName);
                         fileUri = Uri.fromFile(file);
+
+                        //fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
+
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
                     }
@@ -256,33 +261,37 @@ public class AddTag extends AppCompatActivity {
         });
     }
 
+
     //On camera result
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+        if (requestCode != RESULT_CANCELED) {
 
-            ImageView imageView = findViewById(R.id.image);
-            Uri selectedImage = fileUri;
-            String path = fileUri.getPath();
-            getContentResolver().notifyChange(selectedImage, null);
-            ContentResolver cr = getContentResolver();
-            Bitmap bitmap;
-            File actualPath;
+            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-            try {
-                bitmap = MediaStore.Images.Media
-                        .getBitmap(cr, selectedImage);
+                ImageView imageView = findViewById(R.id.image);
+                Uri selectedImage = fileUri;
+                String path = fileUri.getPath();
+                getContentResolver().notifyChange(selectedImage, null);
+                ContentResolver cr = getContentResolver();
+                Bitmap bitmap;
+                File actualPath;
 
-                actualPath = new File(path);
-                imageView.setImageBitmap(bitmap);
+                try {
+                    bitmap = MediaStore.Images.Media
+                            .getBitmap(cr, selectedImage);
 
-                mImagePath = actualPath.getAbsolutePath();
+                    actualPath = new File(path);
+                    imageView.setImageBitmap(bitmap);
 
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-                e.printStackTrace();
+                    mImagePath = actualPath.getAbsolutePath();
+
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                    e.printStackTrace();
+                }
+
             }
-
         }
     }
 

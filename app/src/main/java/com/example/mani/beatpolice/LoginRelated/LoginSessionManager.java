@@ -143,6 +143,15 @@ public class LoginSessionManager {
 
     public void saveAllotmentDetails(String id, String a_id, String aTime,String aName,String aDes,String aCoord){
 
+        editor.putBoolean(IS_ALLOTED,false);
+
+        editor.putString(KEY_ALLOT_ID,"");
+        editor.putString(KEY_A_ID,"");
+        editor.putString(KEY_A_TIME,"");
+        editor.putString(KEY_AREA,"");
+        editor.putString(KEY_DES,"");
+        editor.putString(KEY_COORD,"");
+
         Log.e(TAG, "called : saveAllotedDetails");
         editor.putBoolean(IS_ALLOTED,true);
 

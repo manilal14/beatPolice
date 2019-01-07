@@ -10,7 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,6 +23,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -41,6 +42,7 @@ import com.example.mani.beatpolice.TagsRelated.NormalTagInfo;
 import com.example.mani.beatpolice.TagsRelated.SSTagInfo;
 import com.example.mani.beatpolice.TagsRelated.Tag;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -51,8 +53,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
@@ -125,9 +125,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mAreaTagList = new ArrayList<>();
         mTagList = new ArrayList<>();
-
-        fetchAllotmentDetails();
-
     }
 
     @Override
@@ -148,8 +145,17 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             return;
         }
         else {
+            Log.e(TAG,"2...........");
             mapFragment.getMapAsync(this);
         }
+        ImageView gps   = mRootView.findViewById(R.id.gps);
+        gps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(TAG, "onClick: clicked gps icon");
+                getDeviceLocation();
+            }
+        });
 
     }
 
@@ -169,55 +175,62 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMapToolbarEnabled(false);
-        
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+
+        fetchAllotmentDetails();
+
+    }
+
+    private void nextOnMapReady() {
+
         fetchAllTagsFromDatabase();
 
         if(!mSession.isAlloted()) {
-            Log.e(TAG,"called : Session not alloted");
+            Log.e(TAG,"Session not alloted");
             return;
         }
 
-        if(checkAllotmentTime())
-            mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
-        
-        Log.e(TAG,"called : FetchTagsFromRoom");
+        Log.e(TAG,"called : FetchTagsFromRoom1");
         new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         Log.e(TAG,"Beat area is allocated");
 
-        
+
         setPolygon();
 
-        // Set up polygon
-        mPolygonOption  = new PolygonOptions();
-        String coord = mSession.getAllotmentDetails().get(KEY_COORD);
+        markerClickListener();
 
-        if(!coord.equals("")) {
-
-            String s[];
-            List<LatLng> latlnglist = new ArrayList<>();
-
-            try {
-
-                s = coord.split(",");
-                for (int i = 0; i < s.length; i = i + 2) {
-                    LatLng latLng = new LatLng(Double.valueOf(s[i]), Double.valueOf(s[i + 1]));
-                    latlnglist.add(latLng);
-                }
-
-                for (int i = 0; i < latlnglist.size(); i++)
-                    mPolygonOption.add(latlnglist.get(i));
-
-                mPolygonOption.strokeColor(Color.RED)
-                        .fillColor(getResources().getColor(R.color.map_alloted_color))
-                        .zIndex(5.0f);
-                mMap.addPolygon(mPolygonOption);
-
-            } catch (Exception e) {
-                Log.e(TAG, "Exception cought 1 : " + e);
-            }
+        if(!checkAllotmentTime()){
+            Log.e(TAG,"time is out of range");
+            return;
         }
 
+        mRootView.findViewById(R.id.marker_imageview).setVisibility(View.VISIBLE);
 
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+
+                LatLng latLng = mMap.getCameraPosition().target;
+
+                boolean isInside = PolyUtil.containsLocation(latLng,mPolygonOption.getPoints(),false);
+                if(!isInside){
+                    Log.e(TAG,"Marker is outside the area alloted");
+                    return;
+                }
+
+                Log.e(TAG,"inside area alloted");
+
+                showSnackBar(latLng);
+            }
+        });
+    }
+
+    private void markerClickListener() {
+
+        if(mMap == null){
+            Log.e("check","nMap is null");
+            return;
+        }
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
@@ -254,7 +267,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                 Intent i;
 
                 if(mAreaTagList.get(tagIndexClicked).getTagType() == 1)
-                     i = new Intent(getActivity(),SSTagInfo.class);
+                    i = new Intent(getActivity(),SSTagInfo.class);
                 else
                     i  = new Intent(getActivity(),NormalTagInfo.class);
 
@@ -265,38 +278,37 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             }
         });
 
-        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
-            @Override
-            public void onCameraIdle() {
-
-                LatLng latLng = mMap.getCameraPosition().target;
-
-                boolean isInside = PolyUtil.containsLocation(latLng,mPolygonOption.getPoints(),false);
-                if(!isInside){
-                    Log.e(TAG,"Marker is outside the area alloted");
-                    return;
-                }
-
-                Log.e(TAG,"inside area alloted");
-
-                if(!checkAllotmentTime()) {
-                    Log.e(TAG,"You don't have permisssion to tag now2");
-                    return;
-                }
-
-                showSnackBar(latLng);
-            }
-        });
-
-
     }
 
     private void setPolygon() {
+        Log.e(TAG,"called : setPolygon");
+        mPolygonOption  = new PolygonOptions();
+        String coord = mSession.getAllotmentDetails().get(KEY_COORD);
+
+        if(!coord.equals("")) {
+            String s[];
+            List<LatLng> latlnglist = new ArrayList<>();
+            try {
+                s = coord.split(",");
+                for (int i = 0; i < s.length; i = i + 2) {
+                    LatLng latLng = new LatLng(Double.valueOf(s[i]), Double.valueOf(s[i + 1]));
+                    latlnglist.add(latLng);
+                }
+
+                for (int i = 0; i < latlnglist.size(); i++)
+                    mPolygonOption.add(latlnglist.get(i));
+                mPolygonOption.strokeColor(Color.RED)
+                        .fillColor(getResources().getColor(R.color.map_alloted_color))
+                        .zIndex(5.0f);
+                mMap.addPolygon(mPolygonOption);
+
+            } catch (Exception e) {
+                Log.e(TAG, "Exception cought 1 : " + e);
+            }
+        }
     }
 
     private void saveTagsToRoom() {
-
-        Log.e(TAG,"called : saveTagsToRoom");
 
         int allottedAreaId = Integer.parseInt(mSession.getAllotmentDetails().get(KEY_A_ID));
 
@@ -472,8 +484,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         super.onResume();
 
         if(shouldExecuteOnResume) {
-            Log.e(TAG, "called : onResume");
-            Log.e(TAG,"called : FetchTagsFromRoom");
+            Log.e(TAG,"called : onResume, FetchTagsFromRoom2");
             new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         }
 
@@ -502,20 +513,26 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         mSession.clearAllotedArea();
                         mActivity.stopService(new Intent(mActivity, MyService.class));
                         new ClearAreaTagTable(BeatPoliceDb.getInstance(mActivity)).execute();
-                        return;
+                        //return;
                     }
-                    //Pick the last alloted area (more than one alloted area may be there)
-                    JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
 
-                    String id      = jsonObject.getString("id");
-                    String a_id    = jsonObject.getString("a_id");
-                    String a_time  = jsonObject.getString("a_time");
-                    String a_name  = jsonObject.getString("a_name");
-                    String a_des   = jsonObject.getString("des");
-                    String a_coord = jsonObject.getString("coord");
+                    else {
+                        //Pick the last alloted area (more than one alloted area may be there)
+                        JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length()-1);
 
-                    mSession.saveAllotmentDetails(id,a_id,a_time,a_name,a_des,a_coord);
-                    mActivity.startService(new Intent(mActivity, MyService.class));
+                        String id      = jsonObject.getString("id");
+                        String a_id    = jsonObject.getString("a_id");
+                        String a_time  = jsonObject.getString("a_time");
+                        String a_name  = jsonObject.getString("a_name");
+                        String a_des   = jsonObject.getString("des");
+                        String a_coord = jsonObject.getString("coord");
+
+                        mSession.saveAllotmentDetails(id,a_id,a_time,a_name,a_des,a_coord);
+                        Log.e(TAG,"Location service started");
+                        mActivity.startService(new Intent(mActivity, MyService.class));
+                    }
+
+                    nextOnMapReady();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -570,9 +587,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         case 2 : drawable = getResources().getDrawable(R.drawable.mss_issue); break;
                     }
                 }
-
                 else {
-
                     int tagStatus = tagDetails.getStatus();
                     switch (tagStatus){
                         case 0 : drawable = getResources().getDrawable(R.drawable.marker_inside_unvisited); break;
@@ -628,29 +643,67 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG, "getDeviceLocation");
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(mActivity);
 
-        try {
-            if (mLocationPermissionsGranted) {
+        LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
+                .setFastestInterval(1 * 1000);
 
-                final Task location = mFusedLocationProviderClient.getLastLocation();
-                location.addOnCompleteListener(new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
+        LatLng currentLocation = null;
 
-                        if (task.isSuccessful()) {
-                            Location currentLocation = (Location) task.getResult();
-                            mMyLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                            Log.e(TAG,"myLocation : "+mMyLocation);
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
+        GPSTracker tracker = new GPSTracker(mActivity);
+        if (!tracker.canGetLocation()) {
+            tracker.showSettingsAlert();
+        } else {
+//            double latitude = tracker.getLatitude();
+//            double longitude = tracker.getLongitude();
 
-                        } else {
-                            Log.e(TAG, "onComplete: current location is null");
-                        }
-                    }
-                });
+            currentLocation = new LatLng(tracker.getLatitude(),tracker.longitude);
+            Log.e(TAG,"myLocation : "+currentLocation);
+
+            if(currentLocation == null){
+                Toast.makeText(mActivity,"Please turn on gps first",Toast.LENGTH_SHORT).show();
+                return;
             }
-        } catch (SecurityException e) {
-            Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
+
+            mMyLocation = currentLocation;
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
+
+
         }
+
+
+
+//        try {
+//            if (mLocationPermissionsGranted) {
+//
+//                final Task location = mFusedLocationProviderClient.getLastLocation();
+//                //Log.e(TAG,"Task Location :"+location);
+//
+//                location.addOnCompleteListener(new OnCompleteListener() {
+//                    @Override
+//                    public void onComplete(@NonNull Task task) {
+//
+//                        if (task.isSuccessful()) {
+//                            Location currentLocation = (Location) task.getResult();
+//
+//                            if(currentLocation == null){
+//                                Log.e(TAG,"current location is null");
+//                                return;
+//                            }
+//
+//                            mMyLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+//                            Log.e(TAG,"myLocation : "+mMyLocation);
+//                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, GPS_ZOOM));
+//
+//                        } else {
+//                            Log.e(TAG, "onComplete: current location is null");
+//                        }
+//                    }
+//                });
+//            }
+//        } catch (SecurityException e) {
+//            Log.e(TAG, "getDeviceLocation: SecurityException: " + e.getMessage());
+//        }
     }
 
     private boolean checkAllotmentTime() {
@@ -705,8 +758,12 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                     mLocationPermissionsGranted = true;
                     initMap();
                 }
-
                 break;
+
+
+
+
+
 
         }
     }
@@ -733,7 +790,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         return bitmap;
     }
 
+
     private void showSnackBar(final LatLng latLng){
+
+        if(!checkAllotmentTime()) {
+            Log.e(TAG,"You don't have permisssion to tag now2");
+            return;
+        }
 
         CoordinatorLayout coordinatorLayout = mRootView.findViewById(R.id.coordinate_layout);
         Snackbar snackbar = Snackbar
@@ -786,7 +849,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            showTagInsideArea();
+            //showTagInsideArea();
+            Log.e(TAG,"called : FetchTagsFromRoom3");
+            new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         }
     }
 
@@ -832,9 +897,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            //showTagInsideArea();
+
         }
     }
+
+
 
 
 

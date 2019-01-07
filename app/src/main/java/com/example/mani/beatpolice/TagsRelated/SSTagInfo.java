@@ -14,12 +14,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -119,11 +121,10 @@ public class SSTagInfo extends AppCompatActivity {
         setContentView(R.layout.activity_sstag_info);
 
         mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
-
         mIssueList = new ArrayList<>();
 
         mProgressDialog = new ProgressDialog(SSTagInfo.this);
-        mProgressDialog.setMessage("Uploading....");
+        mProgressDialog.setMessage("Please wait...");
 
         fetchIssueTypes();
 
@@ -286,11 +287,23 @@ public class SSTagInfo extends AppCompatActivity {
 
                 Log.e(TAG,"onCameraClick");
 
+                StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+                StrictMode.setVmPolicy(builder.build());
+
                 if (checkSelfPermission(Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.CAMERA},
                             MY_CAMERA_PERMISSION_CODE);
-                } else {
+                }
+                else if (ContextCompat.checkSelfPermission(SSTagInfo.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(SSTagInfo.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                }
+
+
+                else {
 
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
@@ -299,7 +312,8 @@ public class SSTagInfo extends AppCompatActivity {
 
                         File file = new File(SSTagInfo.this.getExternalCacheDir(),
                                 allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
-                        mFileUri = Uri.fromFile(file);
+                        //mFileUri = Uri.fromFile(file);
+                        mFileUri = FileProvider.getUriForFile(SSTagInfo.this,"com.example.mani.beatpolice.provider",file);
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
                     }
@@ -334,7 +348,6 @@ public class SSTagInfo extends AppCompatActivity {
                 else {
                     sendReportWithoutImage(issueType,des,0,2);
                 }
-
                 alertDialog.dismiss();
 
             }
@@ -350,33 +363,36 @@ public class SSTagInfo extends AppCompatActivity {
 
         Log.e(TAG,"onActivityResult : called");
 
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+        if(requestCode != RESULT_CANCELED) {
 
-            Uri selectedImage = mFileUri;
-            String path       = mFileUri.getPath();
-            getContentResolver().notifyChange(selectedImage, null);
-            ContentResolver cr = getContentResolver();
+            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-            Bitmap bitmap;
-            File actualPath;
+                Uri selectedImage = mFileUri;
+                String path = mFileUri.getPath();
+                getContentResolver().notifyChange(selectedImage, null);
+                ContentResolver cr = getContentResolver();
 
-            try {
-                bitmap = MediaStore.Images.Media
-                        .getBitmap(cr, selectedImage);
+                Bitmap bitmap;
+                File actualPath;
 
-                actualPath = new File(path);
-                mImagePath = actualPath.getAbsolutePath();
+                try {
+                    bitmap = MediaStore.Images.Media
+                            .getBitmap(cr, selectedImage);
 
-                ImageView imageView = mDialogView.findViewById(R.id.image);
-                imageView.setImageBitmap(bitmap);
+                    actualPath = new File(path);
+                    mImagePath = actualPath.getAbsolutePath();
 
-                Log.e(TAG, "Actual path : " + actualPath.toString());
+                    ImageView imageView = mDialogView.findViewById(R.id.image);
+                    imageView.setImageBitmap(bitmap);
 
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-                e.printStackTrace();
+                    Log.e(TAG, "Actual path : " + actualPath.toString());
+
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                    e.printStackTrace();
+                }
+
             }
-
         }
     }
 
@@ -525,7 +541,6 @@ public class SSTagInfo extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         switch (id){
             case R.id.history:
                 Intent i = new Intent(SSTagInfo.this,ReportHistory.class);
@@ -556,7 +571,7 @@ public class SSTagInfo extends AppCompatActivity {
             mProgressDialog.show();
             new MultipartUploadRequest(SSTagInfo.this,REPORT_ISSUE_URL)
 
-                    .addFileToUpload(imagePath, "image")
+                    .addFileToUpload(String.valueOf(mFileUri), "image")
 
                     .addParameter("allot_id",allotId)
                     .addParameter("tag_id",tagId)
@@ -575,7 +590,12 @@ public class SSTagInfo extends AppCompatActivity {
                         @Override
                         public void onError(Context context, UploadInfo uploadInfo, ServerResponse serverResponse, Exception exception) {
                             mProgressDialog.dismiss();
-                            Toast.makeText(SSTagInfo.this,"Error uploading",Toast.LENGTH_SHORT).show();
+                            Log.e("asd1",uploadInfo.toString());
+                            if(serverResponse!=null)
+                                Log.e("asd",serverResponse.toString());
+                            if(exception!=null)
+                                Log.e("asd",exception.toString());
+                            Toast.makeText(SSTagInfo.this,"Issue is not reported",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -610,8 +630,10 @@ public class SSTagInfo extends AppCompatActivity {
 
     }
 
-    // Without image, ReportType = 1(for veified), 2(for issue report)
+    // Without image, ReportType = 1(for verified), 2(for issue report)
     private void sendReportWithoutImage(final int issueType, final String des, final int checkValue, final int reportType) {
+
+        mProgressDialog.show();
 
         Log.e(TAG,"called : sendReportWithoutImage");
 
@@ -627,6 +649,7 @@ public class SSTagInfo extends AppCompatActivity {
                 Toast.makeText(SSTagInfo.this,"Success",Toast.LENGTH_SHORT).show();
 
                 //For verired 1, issue reported = 2
+                mProgressDialog.dismiss();
                 new UpdateTagColor(BeatPoliceDb.getInstance(SSTagInfo.this)).execute(reportType);
 
             }
@@ -634,6 +657,8 @@ public class SSTagInfo extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG,error.toString());
+                mProgressDialog.dismiss();
+                Toast.makeText(SSTagInfo.this,error.toString(),Toast.LENGTH_SHORT).show();
             }
         }){
             @Override
@@ -683,11 +708,13 @@ public class SSTagInfo extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            //flag = 1;
             if(!SSTagInfo.this.isDestroyed()){
                 onBackPressed();
             }
         }
+
+
     }
+
 
 }

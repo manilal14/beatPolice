@@ -65,14 +65,22 @@ public class LoginPage extends AppCompatActivity {
     private void verifyCredentails() {
 
         Log.e(TAG, "called : verifyCredentials");
-        EditText et_policeId = findViewById(R.id.police_id);
+
+        EditText et_mobile         = findViewById(R.id.mobile);
         final EditText et_password = findViewById(R.id.password);
 
-        final String policeId = et_policeId.getText().toString();
-        final String password = et_password.getText().toString();
+        final String phone         = et_mobile.getText().toString().trim();
+        final String password      = et_password.getText().toString().trim();
 
-        if (policeId.equals("") || password.equals("")) {
+        if (phone.equals("") || password.equals("")) {
             Toast.makeText(LoginPage.this, "Insert both field", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if(phone.length()!=10){
+            Toast.makeText(LoginPage.this, "Phone number not valid", Toast.LENGTH_SHORT).show();
+            et_mobile.setText("");
+            et_password.setText("");
             return;
         }
 
@@ -102,10 +110,10 @@ public class LoginPage extends AppCompatActivity {
                     }
 
                     String name   = jsonObject.getString("p_name");
-                    String phone  = jsonObject.getString("p_phone");
+                    String pid  = jsonObject.getString("p_pid");
                     String pic    = jsonObject.getString("p_pic");
 
-                    mSession.createLoginSession(policeId,password,name,phone,pic);
+                    mSession.createLoginSession(pid,password,name,phone,pic);
 
                     startActivity(new Intent(LoginPage.this,HomePage.class));
                     finish();
@@ -131,7 +139,7 @@ public class LoginPage extends AppCompatActivity {
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String,String> params = new HashMap<>();
 
-                params.put("p_id",policeId);
+                params.put("phone",phone);
                 params.put("pass",password);
 
                 return params;

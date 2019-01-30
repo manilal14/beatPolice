@@ -104,9 +104,7 @@ public class FragmentProfile extends Fragment {
         mRootView = inflater.inflate(R.layout.fragment_profile, container, false);
 
 
-
         CircleImageView profile = mRootView.findViewById(R.id.profile_pic);
-
 
         TextView tv_editPhoto  = mRootView.findViewById(R.id.edit_photo);
         EditText et_name       = mRootView.findViewById(R.id.name);

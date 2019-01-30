@@ -59,14 +59,15 @@
                 android:paddingBottom="32dp">
 
                 <EditText
-                    android:id="@+id/police_id"
+                    android:id="@+id/mobile"
                     style="@style/edit_text_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawableLeft="@drawable/police"
                     android:drawablePadding="16dp"
-                    android:hint="UserId"
-                    android:inputType="text|textFilter"
+                    android:hint="Mobile"
+                    android:maxLength="10"
+                    android:inputType="number"
                     android:paddingBottom="16dp" />
 
                 <EditText

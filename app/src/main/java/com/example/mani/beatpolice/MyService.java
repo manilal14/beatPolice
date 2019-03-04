@@ -24,14 +24,14 @@ import java.util.Map;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
-import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AllOT_HIST_ID;
 
 public class MyService extends Service {
 
-    private static final String TAG = "BOOMBOOMTESTGPS";
+    private static final String TAG = "MyService";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 30*1000;
+    private static final int LOCATION_INTERVAL = 1*1000;
     private static final float LOCATION_DISTANCE = 0;
 
     private class LocationListener implements android.location.LocationListener
@@ -55,18 +55,22 @@ public class MyService extends Service {
 
             boolean isAlloted = new LoginSessionManager(getApplicationContext()).isAlloted();
 
-            if(isAlloted){
-                if(checkAllotmentTime()){
-                    if((!lat.equals("") || lon.equals(""))) {
+            if(isAlloted)
+            {
+
+                if(isCurrentTimeBetweenAllotedTime())
+                {
+
+                    if((!lat.equals("") || lon.equals("")))
+                    {
                         Log.e(TAG, "sending");
                         Toast.makeText(getApplicationContext(), location.getLatitude() + "," + location.getLongitude(), Toast.LENGTH_SHORT).show();
                         sendToDatabase(lat, lon);
                     }
-                    else{
+                    else
+                        {
                         Log.e(TAG,"lat is null");
-                    }
-
-
+                        }
                 }
                 else {
                     Log.e(TAG,"time is not in range");
@@ -170,7 +174,9 @@ public class MyService extends Service {
 
         Log.e(TAG,"called : sendToDatabase");
 
-        final String allotId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_ALLOT_ID);
+        final String allotHistId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_AllOT_HIST_ID);
+
+        Log.e(TAG,"called : "+allotHistId);
 
         final String pos = "[" +latitude+","+longitude+",";
 
@@ -191,7 +197,7 @@ public class MyService extends Service {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String, String> params = new HashMap<>();
-                params.put("allot_id",allotId);
+                params.put("allot_hist_id",allotHistId);
                 params.put("pos",pos);
                 return params;
             }
@@ -201,11 +207,10 @@ public class MyService extends Service {
         MySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
     }
 
-    private boolean checkAllotmentTime() {
 
-        String aTime = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_A_TIME);
-
-        Log.e(TAG,aTime);
+    private boolean isCurrentTimeBetweenAllotedTime() {
+        LoginSessionManager session = new LoginSessionManager(getApplicationContext());
+        String aTime = session.getAllotmentDetails().get(KEY_A_TIME);
 
         String[] s2;
         long sTime = 0;
@@ -217,14 +222,14 @@ public class MyService extends Service {
             sTime = Long.valueOf(s2[0]);
             eTime = Long.valueOf(s2[1]);
 
-        }catch (Exception e){
-            Log.e(TAG,"Exception cought 2");
+        } catch (Exception e) {
+            Log.e(TAG, "Exception cought 2");
         }
 
-        long currUnixTime = System.currentTimeMillis()/1000L;
+        long currUnixTime = System.currentTimeMillis() / 1000L;
 
 
-        if( ! (currUnixTime >= sTime && currUnixTime <= eTime ))
+        if (!(currUnixTime >= sTime && currUnixTime <= eTime))
             return false;
 
 

@@ -10,10 +10,11 @@
         android:title="add tag"
         android:id="@+id/nav_add_tag"
         android:icon="@drawable/add_tag"/>
+
     <item
-        android:title="note"
-        android:id="@+id/nav_note"
-        android:icon="@drawable/note"/>
+        android:title="sync"
+        android:id="@+id/nav_sync"
+        android:icon="@drawable/upload"/>
 
     <item
         android:title="profile"

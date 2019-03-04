@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -23,10 +24,19 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
+import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -40,6 +50,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -47,9 +58,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import static android.accounts.AccountManager.KEY_PASSWORD;
 import static android.app.Activity.RESULT_OK;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.PROFILE_PIC_URL;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AREA;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AllOT_HIST_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_NAME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PHONE;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PIC;
@@ -86,11 +100,6 @@ public class FragmentProfile extends Fragment {
         requestStoragePermission();
 
         Log.e(TAG, "called : onCreate");
-
-
-        mActivity.getSupportActionBar().setTitle("Profile");
-        mActivity.getSupportActionBar().show();
-
         mSession = new LoginSessionManager(mActivity);
 
 
@@ -100,8 +109,9 @@ public class FragmentProfile extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Log.e(TAG, "called : onCreateew");
+        Log.e(TAG, "called : onCreateView");
         mRootView = inflater.inflate(R.layout.fragment_profile, container, false);
+
 
 
         CircleImageView profile = mRootView.findViewById(R.id.profile_pic);
@@ -195,10 +205,60 @@ public class FragmentProfile extends Fragment {
             }
         });
 
+        clickListener();
+
         return mRootView;
     }
 
 
+    private void clickListener() {
+
+
+        mRootView.findViewById(R.id.back_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mActivity.onBackPressed();
+                //mActivity.loadFragment(new FragmentMap(),true);
+            }
+        });
+
+        mRootView.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateLogoutTime(mSession.getAllotmentDetails().get(KEY_AllOT_HIST_ID));
+                new ClearAreaTagTable(BeatPoliceDb.getInstance(mActivity)).execute();
+            }
+        });
+
+    }
+
+    private void updateLogoutTime(final String allotHistId) {
+
+        String MY_URL = BASE_URL + "logout.php";
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, MY_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e(TAG,response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG,error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                HashMap<String, String> params = new HashMap<>();
+                params.put("allot_hist_id",allotHistId);
+                return params;
+            }
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        MySingleton.getInstance(mActivity).addToRequestQueue(stringRequest);
+
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -206,24 +266,19 @@ public class FragmentProfile extends Fragment {
 
         Log.e(TAG, "onActivityResult");
 
-
         if(requestCode == GALLARY_REQUEST && resultCode == RESULT_OK && data != null) {
             filePath = data.getData();
             CropImage.activity(filePath)
                     .setGuidelines(CropImageView.Guidelines.ON)
                     .start(getContext(), this);
-            Log.e(TAG, "2");
         }
 
         Log.e(TAG, "Request code "+requestCode);
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            Log.e(TAG, "3");
 
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-
-                Log.e(TAG, "4");
 
                 Uri resultUri = result.getUri();
                 try {
@@ -241,8 +296,6 @@ public class FragmentProfile extends Fragment {
                 Toast.makeText(mActivity,error.toString(),Toast.LENGTH_SHORT).show();
             }
         }
-
-        Log.e(TAG, "5");
     }
 
     public void uploadMultipart() {
@@ -404,4 +457,29 @@ public class FragmentProfile extends Fragment {
 
 
     }
+
+    class ClearAreaTagTable extends AsyncTask<Void,Void,Void> {
+
+        private final AreaTagTableDao areaTagTableDao;
+
+        public ClearAreaTagTable(BeatPoliceDb instance) {
+            areaTagTableDao = instance.getAreaTagTableDao();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            areaTagTableDao.deleteAll();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mSession.logout();
+            mActivity.stopService(new Intent(mActivity, MyService.class));
+            mActivity.finish();
+        }
+    }
+
+
 }

@@ -6,11 +6,43 @@
     android:layout_height="match_parent"
     tools:context=".TagsRelated.AddTag">
 
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/back"/>
+
+        <TextView
+            android:id="@+id/todo_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="32dp"
+            android:text="Add tag"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:fontFamily="@font/gotham_medium_regular"/>
+
+
+
+    </android.support.v7.widget.Toolbar>
+    
+    
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="@dimen/page_left_margin"
-        android:layout_marginTop="@dimen/page_top_margin"
+        android:layout_marginTop="64dp"
         android:layout_marginRight="@dimen/page_right_margin"
         android:layout_marginBottom="56dp"
         android:scrollbars="none">

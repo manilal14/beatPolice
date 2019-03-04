@@ -13,8 +13,9 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        tools:remove="android:maxSdkVersion"/>
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:remove="android:maxSdkVersion" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -31,8 +32,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-        <activity android:name=".LoginRelated.LoginPage"
-            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".LoginRelated.LoginPage"
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/Base.Theme.AppCompat" />
@@ -54,36 +57,39 @@
             android:name=".TagsRelated.AddTag"
             android:label="Add Tag"
             android:parentActivityName=".HomePage"
-            android:screenOrientation="portrait"
-            />
-        <activity android:name=".TagsRelated.NormalTagInfo"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".TagsRelated.NormalTagInfo"
             android:label="Info"
-            android:screenOrientation="portrait"/>
-        <activity android:name=".TagsRelated.SSTagInfo"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".TagsRelated.SSTagInfo"
             android:label="Info"
-            android:screenOrientation="portrait"/>
-
-        <activity android:name=".ReportHistory"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ReportHistory"
             android:label="Report History"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
 
-        <service android:name=".MyService" android:process=":my_service" />
+        <service
+            android:name=".MyService"
+            android:process=":my_service" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.example.mani.beatpolice.provider"
             android:exported="false"
             android:grantUriPermissions="true">
+
             <!-- ressource file to create -->
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths">
-            </meta-data>
+                android:resource="@xml/file_paths" />
         </provider>
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="b46bc56239b28668cdcea45e91a54a8d26221673"/>
+            android:value="b46bc56239b28668cdcea45e91a54a8d26221673" />
 
         <service
             android:name=".FCMPackage.MyFireBaseMessenginService"
@@ -93,6 +99,9 @@
             </intent-filter>
         </service>
 
+        <activity
+            android:name=".TodoRelated.TodoGetDetailsPage"/>
+        <activity android:name=".SyncRelated.SyncHomePage"/>
     </application>
 
 </manifest>

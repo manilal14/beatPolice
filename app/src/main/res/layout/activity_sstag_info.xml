@@ -3,10 +3,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#f8f9f9"
     tools:context=".TagsRelated.SSTagInfo">
 
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/back"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="32dp"
+            android:text="Seniour Citizen"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:fontFamily="@font/gotham_medium_regular"/>
+
+
+
+    </android.support.v7.widget.Toolbar>
+
     <LinearLayout
+        android:layout_marginTop="57dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/toolbar_height"
@@ -170,7 +201,7 @@
         android:id="@+id/image_progress_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp" />
+        android:layout_marginTop="136dp" />
 
 
 </FrameLayout>

@@ -48,7 +48,7 @@ public class ReportHistory extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report_history);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mProgressDialog = new ProgressDialog(ReportHistory.this);
         mProgressDialog.setMessage("Please Wait");

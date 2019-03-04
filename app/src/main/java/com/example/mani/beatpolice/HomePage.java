@@ -1,7 +1,6 @@
 package com.example.mani.beatpolice;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -10,7 +9,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.android.volley.AuthFailureError;
@@ -19,21 +17,16 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.ndk.CrashlyticsNdk;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.FCMPackage.SharedPrefFcm;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
-import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
-import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
+import com.example.mani.beatpolice.SyncRelated.SyncHomePage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import io.fabric.sdk.android.Fabric;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
@@ -49,6 +42,8 @@ public class HomePage extends AppCompatActivity  {
 
     private final  String TERMINATE_URL = BASE_URL + "terminate_allotment.php";
 
+    private boolean mIsProfileActive = false;
+
 
     LoginSessionManager mSession;
     FragmentManager mFragmentManager;
@@ -57,14 +52,11 @@ public class HomePage extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.e(TAG, "Crashlytics is initialised");
+//        Log.e(TAG, "Crashlytics is initialised");
+//        Fabric.with(this, new Crashlytics(), new CrashlyticsNdk());
 
-        Fabric.with(this, new Crashlytics(), new CrashlyticsNdk());
         setContentView(R.layout.activity_home_page);
-
         Log.e(TAG, "called : onCreate");
-
-
         mSession = new LoginSessionManager(HomePage.this);
 
         if(!mSession.isLoggedIn()){
@@ -82,7 +74,7 @@ public class HomePage extends AppCompatActivity  {
         clickLister();
         mFragmentMap      = new FragmentMap();
         mFragmentProfile  = new FragmentProfile();
-        loadFragment(mFragmentMap);
+        loadFragment(mFragmentMap,false);
 
 
     }
@@ -100,10 +92,14 @@ public class HomePage extends AppCompatActivity  {
 
                 switch (id){
                     case R.id.nav_home:
-                        loadFragment(mFragmentMap);
+                        loadFragment(mFragmentMap,false);
+                        return true;
+
+                    case R.id.nav_sync:
+                        startActivity(new Intent(HomePage.this,SyncHomePage.class));
                         return true;
                     case R.id.nav_profile:
-                        loadFragment(mFragmentProfile);
+                        loadFragment(mFragmentProfile,true);
                         return true;
                 }
 
@@ -113,55 +109,44 @@ public class HomePage extends AppCompatActivity  {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_homepage,menu);
-        return true;
+    protected void onResume() {
+        super.onResume();
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.nav_home);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        switch (id){
-            case R.id.logout:
-                new ClearAreaTagTable(BeatPoliceDb.getInstance(HomePage.this)).execute();
-                break;
-
-        }
-        return false;
-    }
-
-    private void loadFragment(Fragment fragment) {
+    public void loadFragment(Fragment fragment, boolean isProfileActive) {
 
         Log.e(TAG, "called : loadFragment");
 
+        mIsProfileActive = isProfileActive;
+
         String fragmentTag = fragment.getClass().getName();
         mFragmentManager   = getSupportFragmentManager();
+
 
         boolean fragmentPopped = mFragmentManager.popBackStackImmediate(fragmentTag , 0);
 
         if (!fragmentPopped && mFragmentManager.findFragmentByTag(fragmentTag) == null) {
 
             FragmentTransaction ftx = mFragmentManager.beginTransaction();
-            //ftx.addToBackStack(fragment.getClass().getSimpleName());
             ftx.replace(R.id.frame_container, fragment);
             ftx.commit();
         }
-
-
-
-
-
     }
 
     @Override
     public void onBackPressed() {
+
         Log.e(TAG, "called : onBackPressed");
-        int count = mFragmentManager.getBackStackEntryCount();
-        Log.e(TAG,"count "+count);
-        super.onBackPressed();
 
-
+        if(mIsProfileActive) {
+            loadFragment(new FragmentMap(), false);
+            BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
+        else
+            super.onBackPressed();
     }
 
     @Override
@@ -212,31 +197,4 @@ public class HomePage extends AppCompatActivity  {
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(this).addToRequestQueue(stringRequest);
     }
-
-    class ClearAreaTagTable extends AsyncTask<Void,Void,Void> {
-
-        private final AreaTagTableDao areaTagTableDao;
-
-        public ClearAreaTagTable(BeatPoliceDb instance) {
-            areaTagTableDao = instance.getAreaTagTableDao();
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            areaTagTableDao.deleteAll();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            mSession.logout();
-            stopService(new Intent(HomePage.this, MyService.class));
-            finish();
-        }
-    }
-
-
-
-
 }

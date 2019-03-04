@@ -142,6 +142,13 @@ public class SSTagInfo extends AppCompatActivity {
 
     private void clickListener() {
 
+        findViewById(R.id.back_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         TextView btnVerify = findViewById(R.id.verified);
         TextView btnReport = findViewById(R.id.report);
 

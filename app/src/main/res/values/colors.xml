@@ -15,4 +15,8 @@
     <color name="background4">#eef0f0</color>
     <color name="black2">#5d636b</color>
 
+    <color name="red_light">#33da1f26</color>
+    <color name="green_light">#330B6121</color>
+    <color name="search_hint">#abb2b9</color>
+
 </resources>

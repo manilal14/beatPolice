@@ -75,8 +75,6 @@ public class AddTag extends AppCompatActivity {
     private ProgressDialog mProgressDialog;
     private LoginSessionManager mSession;
 
-
-
     // These are for new tag to be inserted
     private int t_aId;
     private String  t_coord;
@@ -111,6 +109,13 @@ public class AddTag extends AppCompatActivity {
     }
 
     private void clickListener() {
+
+        findViewById(R.id.back_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         final Spinner spinnerTagType = findViewById(R.id.tag_type);
 
@@ -179,14 +184,10 @@ public class AddTag extends AppCompatActivity {
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
                         String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
-
                         mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
-
                         file = new File(AddTag.this.getExternalCacheDir(), mImageName);
                         fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
-
                         Log.e(TAG,"mFileUri "+fileUri.toString());
-
                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
                     }

@@ -36,6 +36,10 @@ public class LoginSessionManager {
     public static final String KEY_DES        = "aDes";
     public static final String KEY_COORD      = "aCoord";
 
+    public static final String KEY_AllOT_HIST_ID    = "allotHistId";
+
+    public static final String TODO_UPDATED_ON = "todoUpdatedOn";
+
 
     public LoginSessionManager(Context context){
         mCtx = context;
@@ -76,12 +80,8 @@ public class LoginSessionManager {
 
         Intent i = new Intent(mCtx, LoginPage.class);
 
-        // Closing all the Activities
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        // Add new Flag to start new Activity
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        // Staring Login Activity
         Toast.makeText(mCtx,"Logged Out",Toast.LENGTH_SHORT).show();
         mCtx.startActivity(i);
     }
@@ -114,6 +114,8 @@ public class LoginSessionManager {
         editor.putString(KEY_AREA,"");
         editor.putString(KEY_DES,"");
         editor.putString(KEY_COORD,"");
+
+        editor.putString(KEY_AllOT_HIST_ID,"");
 
 
         editor.commit();
@@ -161,6 +163,7 @@ public class LoginSessionManager {
         editor.putString(KEY_AREA,aName);
         editor.putString(KEY_DES,aDes);
         editor.putString(KEY_COORD,aCoord);
+
         editor.commit();
     }
 
@@ -175,8 +178,25 @@ public class LoginSessionManager {
         details.put(KEY_DES, pref.getString(KEY_DES, ""));
         details.put(KEY_COORD, pref.getString(KEY_COORD, ""));
 
+        details.put(KEY_AllOT_HIST_ID, pref.getString(KEY_AllOT_HIST_ID, ""));
+
         Log.e("check", pref.getString(KEY_ALLOT_ID, "")+" "+pref.getString(KEY_AREA, ""));
         return  details;
+    }
+
+
+    public void setTodoUpdatedate(String date){
+        editor.putString(TODO_UPDATED_ON,date);
+        editor.commit();
+    }
+
+    public String getTodoUpdateDate(){
+        return  pref.getString(TODO_UPDATED_ON,"");
+    }
+
+    public void saveAllotmentHistoryId(String id){
+        editor.putString(KEY_AllOT_HIST_ID,id);
+        editor.commit();
     }
 
 }

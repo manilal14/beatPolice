@@ -139,6 +139,13 @@ public class NormalTagInfo extends AppCompatActivity {
 
     private void clickListener() {
 
+        findViewById(R.id.back_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         LinearLayout reportButtons = findViewById(R.id.report_layout);
         reportButtons.setVisibility(View.VISIBLE);
 

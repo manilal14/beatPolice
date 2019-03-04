@@ -3,6 +3,7 @@ package com.example.mani.beatpolice.LoginRelated;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -47,22 +48,30 @@ public class LoginPage extends AppCompatActivity {
 
         Log.e(TAG,"called : onCreate");
 
-        getSupportActionBar().hide();
+        //getSupportActionBar().hide();
         mProgressDialog = new ProgressDialog(LoginPage.this);
         mProgressDialog.setMessage("Please wait");
 
         mSession = new LoginSessionManager(LoginPage.this);
+        
+        getMobileUniqueNumber();
 
         TextView login = findViewById(R.id.login);
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                verifyCredentails();
+                verifyCredentials();
             }
         });
     }
 
-    private void verifyCredentails() {
+    private void getMobileUniqueNumber() {
+        String androidId = Settings.Secure.getString(getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        Log.e("android id=",androidId);
+    }
+
+    private void verifyCredentials() {
 
         Log.e(TAG, "called : verifyCredentials");
 
@@ -109,9 +118,9 @@ public class LoginPage extends AppCompatActivity {
                         return;
                     }
 
-                    String name   = jsonObject.getString("p_name");
-                    String pid  = jsonObject.getString("p_pid");
-                    String pic    = jsonObject.getString("p_pic");
+                    String name  = jsonObject.getString("p_name");
+                    String pid   = jsonObject.getString("p_pid");
+                    String pic   = jsonObject.getString("p_pic");
 
                     mSession.createLoginSession(pid,password,name,phone,pic);
 

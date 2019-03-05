@@ -1,9 +1,11 @@
 package com.example.mani.beatpolice.LoginRelated;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -66,9 +68,7 @@ public class LoginPage extends AppCompatActivity {
     }
 
     private void getMobileUniqueNumber() {
-        String androidId = Settings.Secure.getString(getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        Log.e("android id=",androidId);
+
     }
 
     private void verifyCredentials() {
@@ -111,6 +111,12 @@ public class LoginPage extends AppCompatActivity {
 
                     int response_code = jsonObject.getInt("response_code");
 
+                    if(response_code == 2){
+                        //Called only for the first time when
+                        generatePopup();
+                        return;
+                    }
+
                     if(response_code<=0){
                         String message = jsonObject.optString("message");
                         Toast.makeText(LoginPage.this,message,Toast.LENGTH_SHORT).show();
@@ -140,7 +146,7 @@ public class LoginPage extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 mProgressDialog.dismiss();
                 Log.e("error",error.toString());
-                Toast.makeText(LoginPage.this,"Login failed",Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginPage.this,error.toString(),Toast.LENGTH_SHORT).show();
             }
         }){
 
@@ -148,8 +154,13 @@ public class LoginPage extends AppCompatActivity {
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String,String> params = new HashMap<>();
 
+                String mobId = Settings.Secure.getString(getContentResolver(),
+                        Settings.Secure.ANDROID_ID);
+                Log.e("Secure mobile id=",mobId);
+
                 params.put("phone",phone);
                 params.put("pass",password);
+                params.put("mob_id",mobId);
 
                 return params;
             }
@@ -157,6 +168,26 @@ public class LoginPage extends AppCompatActivity {
 
         stringRequest.setRetryPolicy(new DefaultRetryPolicy( RETRY_SECONDS*1000, NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(LoginPage.this).addToRequestQueue(stringRequest);
+
+    }
+
+    private void generatePopup() {
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(LoginPage.this);
+        builder1.setMessage("Device registered with the area.");
+        builder1.setView(android.R.layout.activity_list_item);
+        builder1.setCancelable(false);
+
+        builder1.setPositiveButton(
+                "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        verifyCredentials();
+                        dialog.cancel();
+                    }
+                });
+
+        AlertDialog alert11 = builder1.create();
+        alert11.show();
 
     }
 

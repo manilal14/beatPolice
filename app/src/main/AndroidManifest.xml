@@ -99,9 +99,10 @@
             </intent-filter>
         </service>
 
-        <activity
-            android:name=".TodoRelated.TodoGetDetailsPage"/>
-        <activity android:name=".SyncRelated.SyncHomePage"/>
+        <activity android:name=".TodoAndIssue.TodoRelated.TodoGetDetailsPage" />
+        <activity android:name=".TodoAndIssue.SyncRelated.SyncHomePage" />
+        <activity android:name=".TodoAndIssue.IssueRelated.IssueReportPage"
+            android:windowSoftInputMode="stateHidden"/>
     </application>
 
 </manifest>

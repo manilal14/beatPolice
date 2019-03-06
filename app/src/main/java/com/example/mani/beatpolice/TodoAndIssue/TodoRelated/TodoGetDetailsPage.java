@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice.TodoRelated;
+package com.example.mani.beatpolice.TodoAndIssue.TodoRelated;
 
 import android.Manifest;
 import android.app.Activity;
@@ -6,6 +6,8 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -36,7 +38,10 @@ import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,7 +49,6 @@ import java.util.List;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TIME_FORMAT;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.TODAY;
-import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
@@ -63,9 +67,9 @@ public class TodoGetDetailsPage extends AppCompatActivity {
     private long mUnixTo = 0;
     private long mUnixReportedAt = 0;
 
-    private Uri mfileUri;
-
     private LatLng mMyLocation;
+
+    private String mCurrentPhotoPath;
 
 
     LoginSessionManager mSession;
@@ -87,9 +91,6 @@ public class TodoGetDetailsPage extends AppCompatActivity {
 
 
     }
-
-
-
 
 
     private void setView(){
@@ -165,8 +166,6 @@ public class TodoGetDetailsPage extends AppCompatActivity {
 
                 String type = (String) spinner_type.getSelectedItem();
 
-                Log.e(TAG,"from="+mUnixFrom+" to="+mUnixTo+"type="+type+" des="+des+"imageUri"+mfileUri);
-
                 String areaId     = mSession.getAllotmentDetails().get(KEY_A_ID);
                 String  policeId  = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
 
@@ -174,7 +173,7 @@ public class TodoGetDetailsPage extends AppCompatActivity {
 
 
                 TodoTable aTodo = new TodoTable(mSimpleTodo.getId(), policeId, areaId, mSimpleTodo.getTitle(), type, String.valueOf(mUnixFrom),
-                        String.valueOf(mUnixTo), String.valueOf(currentUnix), mfileUri+"",des,
+                        String.valueOf(mUnixTo), String.valueOf(currentUnix), mCurrentPhotoPath,des,
                         String.valueOf(mMyLocation.latitude), String.valueOf(mMyLocation.longitude));
 
                 new SaveTodoToRoom(BeatPoliceDb.getInstance(TodoGetDetailsPage.this)).execute(aTodo);
@@ -184,47 +183,6 @@ public class TodoGetDetailsPage extends AppCompatActivity {
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void openCamera() {
-
-        Log.e(TAG,"onCameraClick");
-
-        if (checkSelfPermission(Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA},
-                    MY_CAMERA_PERMISSION_CODE);
-        }
-        else if (ContextCompat.checkSelfPermission(TodoGetDetailsPage.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(TodoGetDetailsPage.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        }
-
-
-        else {
-
-            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-
-            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-
-                String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
-                String imageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
-
-                //File file = new File(TodoGetDetailsPage.this.getExternalCacheDir(), imageName);
-                //mfileUri = FileProvider.getUriForFile(TodoGetDetailsPage.this,"com.example.mani.beatpolice.provider",file);
-
-                File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-                File file = new File(dir, imageName);
-                mfileUri = FileProvider.getUriForFile(TodoGetDetailsPage.this,"com.example.mani.beatpolice.provider",file);
-
-                Log.e(TAG,"mFileUri "+mfileUri.toString());
-
-
-                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mfileUri);
-                startActivityForResult(cameraIntent, CAMERA_REQUEST);
-            }
-        }
-    }
 
     public void setDateTimePicker(final TextView textView) {
 
@@ -278,25 +236,6 @@ public class TodoGetDetailsPage extends AppCompatActivity {
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
-
-    //On camera result
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode != RESULT_CANCELED)
-        {
-
-            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-
-                ImageView imageView = findViewById(R.id.imageview);
-                Glide.with(TodoGetDetailsPage.this)
-                        .load(mfileUri)
-                        .into(imageView);
-
-            }
-        }
-    }
-
-
 
     class SaveTodoToRoom extends AsyncTask<TodoTable,Void,Void> {
 
@@ -373,6 +312,102 @@ public class TodoGetDetailsPage extends AppCompatActivity {
         }
 
     }
+
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void openCamera() {
+
+        Log.e(TAG,"onCameraClick");
+
+        if (checkSelfPermission(Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    MY_CAMERA_PERMISSION_CODE);
+        }
+        else if (ContextCompat.checkSelfPermission(TodoGetDetailsPage.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(TodoGetDetailsPage.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        }
+
+
+        else {
+
+            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                File photoFile = null;
+                try {
+                    photoFile = createImageFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e(TAG,"file for image is not created");
+                }
+
+                if(photoFile!=null) {
+                    Uri fileUri = FileProvider.getUriForFile(TodoGetDetailsPage.this, "com.example.mani.beatpolice.provider", photoFile);
+                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                    startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                }
+            }
+        }
+    }
+
+    //On camera result
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)   {
+
+        if (requestCode != RESULT_CANCELED)
+        {
+
+            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+
+                ImageView imageView = findViewById(R.id.imageview);
+                Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
+                compressImage(bitmap);
+                Glide.with(TodoGetDetailsPage.this)
+                        .load(mCurrentPhotoPath)
+                        .into(imageView);
+
+            }
+        }
+    }
+
+
+    private File createImageFile() throws IOException {
+
+        String timeStamp      = String.valueOf(System.currentTimeMillis()/1000);
+        String imageFileName  = timeStamp;
+        File storageDir       = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File imageFile        = File.createTempFile(imageFileName, ".jpg", storageDir);
+
+        mCurrentPhotoPath = imageFile.getAbsolutePath();
+        Log.e(TAG,"currentPhotoPath = "+mCurrentPhotoPath);
+        return imageFile;
+    }
+
+    private void compressImage(Bitmap bitmap) {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 18, bos);
+
+        byte[] bitmapData = bos.toByteArray();
+
+        try {
+            //Compressed image is written in same previous image file
+            FileOutputStream fos = new FileOutputStream(mCurrentPhotoPath);
+            fos.write(bitmapData);
+            fos.flush();
+            fos.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG,"Exception while converting bitmap to file, "+e.toString());
+        }
+
+    }
+
 
 
 

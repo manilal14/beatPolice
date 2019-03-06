@@ -19,8 +19,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.FCMPackage.SharedPrefFcm;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueReportPage;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
-import com.example.mani.beatpolice.SyncRelated.SyncHomePage;
+import com.example.mani.beatpolice.TodoAndIssue.SyncRelated.SyncHomePage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,10 +41,7 @@ public class HomePage extends AppCompatActivity  {
     Fragment mFragmentMap;
     Fragment mFragmentProfile;
 
-    private final  String TERMINATE_URL = BASE_URL + "terminate_allotment.php";
-
     private boolean mIsProfileActive = false;
-
 
     LoginSessionManager mSession;
     FragmentManager mFragmentManager;
@@ -59,6 +57,7 @@ public class HomePage extends AppCompatActivity  {
         Log.e(TAG, "called : onCreate");
         mSession = new LoginSessionManager(HomePage.this);
 
+
         if(!mSession.isLoggedIn()){
             mSession.checkLogin();
             finish();
@@ -71,13 +70,13 @@ public class HomePage extends AppCompatActivity  {
             storeTokenToDb(token);
         }
 
+
         clickLister();
         mFragmentMap      = new FragmentMap();
         mFragmentProfile  = new FragmentProfile();
         loadFragment(mFragmentMap,false);
-
-
     }
+
 
     private void clickLister() {
 
@@ -91,22 +90,18 @@ public class HomePage extends AppCompatActivity  {
                 int id = menuItem.getItemId();
 
                 switch (id){
-                    case R.id.nav_home:
-                        loadFragment(mFragmentMap,false);
-                        return true;
-
-                    case R.id.nav_sync:
-                        startActivity(new Intent(HomePage.this,SyncHomePage.class));
-                        return true;
-                    case R.id.nav_profile:
-                        loadFragment(mFragmentProfile,true);
-                        return true;
+                    case R.id.nav_home: loadFragment(mFragmentMap,false); return true;
+                    case R.id.nav_report_issue: startActivity(new Intent(HomePage.this,IssueReportPage.class)); return true;
+                    case R.id.nav_sync: startActivity(new Intent(HomePage.this,SyncHomePage.class));return true;
+                    case R.id.nav_profile: loadFragment(mFragmentProfile,true);return true;
                 }
 
                 return false;
             }
         });
     }
+
+
 
     @Override
     protected void onResume() {
@@ -197,4 +192,8 @@ public class HomePage extends AppCompatActivity  {
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(this).addToRequestQueue(stringRequest);
     }
+
+
+
+
 }

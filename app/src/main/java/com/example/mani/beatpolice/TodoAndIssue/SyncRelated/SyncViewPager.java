@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice.SyncRelated;
+package com.example.mani.beatpolice.TodoAndIssue.SyncRelated;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

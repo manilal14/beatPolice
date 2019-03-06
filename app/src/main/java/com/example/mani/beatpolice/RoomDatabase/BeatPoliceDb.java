@@ -5,12 +5,14 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
-import com.example.mani.beatpolice.TodoRelated.SimpleTodoDao;
-import com.example.mani.beatpolice.TodoRelated.SimpleTodoTable;
-import com.example.mani.beatpolice.TodoRelated.TodoTable;
-import com.example.mani.beatpolice.TodoRelated.TodoTableDao;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueDao;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueTable;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.SimpleTodoDao;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.SimpleTodoTable;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTable;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTableDao;
 
-@Database(entities = { AreaTagTable.class, TodoTable.class, SimpleTodoTable.class}, version = 3,exportSchema = false)
+@Database(entities = { AreaTagTable.class, TodoTable.class, SimpleTodoTable.class,IssueTable.class}, version = 4,exportSchema = false)
 
 public abstract class BeatPoliceDb extends RoomDatabase {
 
@@ -35,6 +37,7 @@ public abstract class BeatPoliceDb extends RoomDatabase {
     public abstract AreaTagTableDao getAreaTagTableDao();
     public abstract TodoTableDao getTodoTableDao();
     public abstract SimpleTodoDao getSimpleTodoTableDao();
+    public abstract IssueDao getIssueDao();
 
 
 }

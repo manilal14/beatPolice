@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice.SyncRelated;
+package com.example.mani.beatpolice.TodoAndIssue.SyncRelated;
 
 
 import android.os.AsyncTask;
@@ -14,8 +14,8 @@ import android.view.ViewGroup;
 import com.example.mani.beatpolice.CommonPackage.MyInterface;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
-import com.example.mani.beatpolice.TodoRelated.TodoTable;
-import com.example.mani.beatpolice.TodoRelated.TodoTableDao;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTable;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTableDao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +34,6 @@ public class FragmentSyncTodo extends Fragment implements MyInterface {
 
     @Override
     public void updatePage() {
-
-
         new FetchTodoFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
     }
 
@@ -81,6 +79,12 @@ public class FragmentSyncTodo extends Fragment implements MyInterface {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+
+            if(mTodoList.size()==0){
+                mRootView.findViewById(R.id.no_data).setVisibility(View.VISIBLE);
+            }
+            else
+                mRootView.findViewById(R.id.no_data).setVisibility(View.GONE);
 
             RecyclerView recyclerView = mRootView.findViewById(R.id.recycler_view_sync_todo);
             recyclerView.setLayoutManager(new LinearLayoutManager(mActivity));

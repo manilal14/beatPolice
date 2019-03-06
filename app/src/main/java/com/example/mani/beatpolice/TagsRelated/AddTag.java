@@ -3,15 +3,16 @@ package com.example.mani.beatpolice.TagsRelated;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -31,6 +32,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
@@ -47,7 +49,10 @@ import net.gotev.uploadservice.UploadStatusDelegate;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,10 +71,10 @@ public class AddTag extends AppCompatActivity {
     private LatLng mTaggedLocation;
     private String mDate;
     private String mTime;
-
-    private String mImagePath;
-    private File file;
-    private Uri fileUri;
+//
+//    private String mImagePath;
+//    private File file;
+//    private Uri fileUri;
     private String mImageName;
 
     private ProgressDialog mProgressDialog;
@@ -85,6 +90,10 @@ public class AddTag extends AppCompatActivity {
     private String t_gender;
     private String t_n_name;
     private String t_n_phone;
+
+
+
+    private String mCurrentPhotoPath;
 
 
     @Override
@@ -162,7 +171,6 @@ public class AddTag extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Log.e(TAG,"onCameraClick");
 
                 if (checkSelfPermission(Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
@@ -183,13 +191,27 @@ public class AddTag extends AppCompatActivity {
 
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
-                        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
-                        mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
-                        file = new File(AddTag.this.getExternalCacheDir(), mImageName);
-                        fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
-                        Log.e(TAG,"mFileUri "+fileUri.toString());
-                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+//                        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
+//                        mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
+//                        file = new File(AddTag.this.getExternalCacheDir(), mImageName);
+//                        fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
+//                        Log.e(TAG,"mFileUri "+fileUri.toString());
+//                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+//                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+
+                        File photoFile = null;
+                        try {
+                            photoFile = createImageFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Log.e(TAG,"file for image is not created");
+                        }
+
+                        if(photoFile!=null){
+                            Uri fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",photoFile);
+                            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                        }
                     }
                 }
             }
@@ -264,8 +286,8 @@ public class AddTag extends AppCompatActivity {
                         return;
                     }
                 }
-
-                if(mImagePath == null){
+                Log.e(TAG,"mCurrentPhotoPath is "+mCurrentPhotoPath);
+                if(mCurrentPhotoPath == null){
                     Toast.makeText(AddTag.this,getString(R.string.image_is_),Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -284,26 +306,12 @@ public class AddTag extends AppCompatActivity {
             if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
                 ImageView imageView = findViewById(R.id.image);
-                Uri selectedImage = fileUri;
-                String path = fileUri.getPath();
-                getContentResolver().notifyChange(selectedImage, null);
-                ContentResolver cr = getContentResolver();
-                Bitmap bitmap;
-                File actualPath;
 
-                try {
-                    bitmap = MediaStore.Images.Media
-                            .getBitmap(cr, selectedImage);
-
-                    actualPath = new File(path);
-                    imageView.setImageBitmap(bitmap);
-
-                    mImagePath = actualPath.getAbsolutePath();
-
-                } catch (Exception e) {
-                    Log.e(TAG, e.getMessage());
-                    e.printStackTrace();
-                }
+                Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
+                compressImage(bitmap);
+                Glide.with(AddTag.this)
+                        .load(mCurrentPhotoPath)
+                        .into(imageView);
 
             }
         }
@@ -332,14 +340,14 @@ public class AddTag extends AppCompatActivity {
         t_n_name = n_name;
         t_n_phone = n_phone;
 
-        Log.e(TAG,"imgPath = "+mImagePath);
+        Log.e(TAG,"imgName = "+mImageName);
 
         try {
 
             mProgressDialog.show();
             new MultipartUploadRequest(AddTag.this, UPLOAD_URL)
 
-                    .addFileToUpload(String.valueOf(fileUri), "image")
+                    .addFileToUpload(mCurrentPhotoPath, "image")
 
                     .addParameter("p_id",String.valueOf(policeId))
                     .addParameter("a_id",String.valueOf(aId))
@@ -471,5 +479,39 @@ public class AddTag extends AppCompatActivity {
             }
 
         }
+    }
+
+    private File createImageFile() throws IOException {
+
+        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
+        mImageName     = allotId+String.valueOf(System.currentTimeMillis())+".jpg";
+        File storageDir   = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File imageFile    = new File(AddTag.this.getExternalCacheDir(), mImageName);
+
+        mCurrentPhotoPath = imageFile.getAbsolutePath();
+        Log.e(TAG,"currentPhotoPath = "+mCurrentPhotoPath);
+        Log.e(TAG,"currentPhotoPath = "+mImageName);
+        return imageFile;
+    }
+
+    private void compressImage(Bitmap bitmap) {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 18, bos);
+
+        byte[] bitmapData = bos.toByteArray();
+
+        try {
+            //Compressed image is written in same previous image file
+            FileOutputStream fos = new FileOutputStream(mCurrentPhotoPath);
+            fos.write(bitmapData);
+            fos.flush();
+            fos.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG,"Exception while converting bitmap to file, "+e.toString());
+        }
+
     }
 }

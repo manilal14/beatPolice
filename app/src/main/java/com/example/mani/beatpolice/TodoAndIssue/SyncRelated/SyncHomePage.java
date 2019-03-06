@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice.SyncRelated;
+package com.example.mani.beatpolice.TodoAndIssue.SyncRelated;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;

@@ -101,5 +101,26 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <style name="right_to_right">
+        <item name="android:windowEnterAnimation">@anim/enter_from_right</item>
+        <item name="android:windowExitAnimation">@anim/exit_to_right</item>
+    </style>
+
+    <style name="fadein_fadeout">
+        <item name="android:windowEnterAnimation">@anim/fadein</item>
+        <item name="android:windowExitAnimation">@anim/fadeout</item>
+    </style>
+
+    <style name="up_down">
+        <item name="android:windowEnterAnimation">@anim/slide_up</item>
+        <item name="android:windowExitAnimation">@anim/slide_down</item>
+    </style>
+
+    <style name="TextLabel" parent="TextAppearance.Design.Hint">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/black2</item>
+        <item name="android:fontFamily">@font/gotham_book_regular</item>
+    </style>
+
 
 </resources>

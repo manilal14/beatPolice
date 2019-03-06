@@ -31,4 +31,6 @@
     <string name="enter_valid_neighbour_">Enter valid neighbour number</string>
     <string name="add_neighbour_">Add neighbour name first</string>
     <string name="image_is_">Image is required</string>
+    <string name="no_issue_to_be_synced">No issue to be synced</string>
+    <string name="no_todo_to_be_synced">No todo to be synced</string>
 </resources>

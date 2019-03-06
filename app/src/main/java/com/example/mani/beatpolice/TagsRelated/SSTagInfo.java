@@ -617,7 +617,7 @@ public class SSTagInfo extends AppCompatActivity {
                                 Log.e("asd",serverResponse.toString());
                             if(exception!=null)
                                 Log.e("asd",exception.toString());
-                            Toast.makeText(SSTagInfo.this,"Issue is not reported",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SSTagInfo.this,"IssueTable is not reported",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -626,7 +626,7 @@ public class SSTagInfo extends AppCompatActivity {
 
                             String message ="";
                             if(checkValue == 0){
-                                message = "Issue Reported";
+                                message = "IssueTable Reported";
                             }
                             else {
                                 message = "verified";

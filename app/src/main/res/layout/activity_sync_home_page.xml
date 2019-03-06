@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".SyncRelated.SyncHomePage">
+    tools:context=".TodoAndIssue.SyncRelated.SyncHomePage">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/my_toolbar"

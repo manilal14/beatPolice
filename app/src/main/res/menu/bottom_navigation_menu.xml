@@ -7,8 +7,8 @@
         android:icon="@drawable/home"/>
 
     <item
-        android:title="add tag"
-        android:id="@+id/nav_add_tag"
+        android:title="@string/report_issue"
+        android:id="@+id/nav_report_issue"
         android:icon="@drawable/add_tag"/>
 
     <item

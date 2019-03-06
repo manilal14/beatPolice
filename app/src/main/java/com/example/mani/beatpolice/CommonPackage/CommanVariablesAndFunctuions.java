@@ -35,6 +35,7 @@ public class CommanVariablesAndFunctuions {
 
     public static final String TIME_FORMAT  = "hh:mm a";
     public static final String TODAY        = "Today";
+    public static  final String LOCATION_NOT_FOUND      = "can't find the location";
 
     public static LatLng getDeviceLocation(Context context) throws Exception {
 

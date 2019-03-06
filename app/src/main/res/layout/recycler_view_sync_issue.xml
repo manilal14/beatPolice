@@ -31,12 +31,12 @@
                     android:paddingRight="16dp">
 
                     <TextView
-                        android:id="@+id/todo_id"
+                        android:id="@+id/issue_id"
                         style="@style/booking_order"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Todo Id 5" />
+                        android:text="Issue Id 0" />
 
                     <TextView
                         android:id="@+id/reporting_time"
@@ -68,7 +68,7 @@
                                 android:id="@+id/title"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Title of todo"
+                                android:text="Title of Issue"
                                 android:textColor="@color/black"
                                 android:textSize="16sp"
                                 android:fontFamily="@font/montserrat_medium"/>
@@ -125,6 +125,10 @@
 
 
                             </LinearLayout>
+
+
+
+
 
                         </LinearLayout>
 

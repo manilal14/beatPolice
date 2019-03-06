@@ -3,16 +3,29 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SyncRelated.FragmentSyncTodo">
+    tools:context=".TodoAndIssue.SyncRelated.FragmentSyncTodo">
 
     <android.support.v7.widget.RecyclerView
+
+        android:paddingBottom="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        android:paddingBottom="16dp"
         android:id="@+id/recycler_view_sync_todo"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"/>
 
-    </android.support.v7.widget.RecyclerView>
+    <TextView
+        android:id="@+id/no_data"
+        android:visibility="gone"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_todo_to_be_synced"
+        android:layout_gravity="center"
+        android:fontFamily="@font/montserrat_regular"
+        android:textStyle="italic"
+        android:gravity="center"/>
+
 
 </FrameLayout>

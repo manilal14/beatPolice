@@ -1,4 +1,4 @@
-package com.example.mani.beatpolice.SyncRelated;
+package com.example.mani.beatpolice.TodoAndIssue.SyncRelated;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -26,8 +26,8 @@ import com.example.mani.beatpolice.CommonPackage.MyInterface;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
-import com.example.mani.beatpolice.TodoRelated.TodoTable;
-import com.example.mani.beatpolice.TodoRelated.TodoTableDao;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTable;
+import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTableDao;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
 import net.gotev.uploadservice.ServerResponse;
@@ -53,8 +53,6 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
     private String TAG = "SyncTodoAdapter";
     private Context mCtx;
     private List<TodoTable> mTodoTableList;
-
-
     private MyInterface listener;
 
     private ProgressDialog mProgressDialog;
@@ -91,7 +89,7 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
         if(!todo.getImagePath().equals("null")){
             Log.e(TAG,"a="+todo.getImagePath());
             Glide.with(mCtx)
-                    .load(Uri.parse(todo.getImagePath()))
+                    .load(todo.getImagePath())
                     .into(holder.iv_image);
         }
         else{
@@ -158,6 +156,10 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
         ImageView imageView   = view.findViewById(R.id.imageView);
         imageView.setImageURI(Uri.parse(imagePath));
         dialog.create();
+
+        dialog.show().getWindow().getAttributes().windowAnimations = R.style.fadein_fadeout;
+
+
     }
 
 
@@ -174,9 +176,8 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
 
                 try {
                     JSONArray jsonArray = new JSONArray(response);
-                    int allSuccess = jsonArray.getJSONObject(0).getInt("q_executed");
-                    if(allSuccess == 1){
-                        Log.e("zxc","deleting");
+                    int qExecuted = jsonArray.getJSONObject(0).getInt("q_executed");
+                    if(qExecuted == 1){
                         deleteTodoFromRoom(todo);
                     }
                 } catch (JSONException e) {

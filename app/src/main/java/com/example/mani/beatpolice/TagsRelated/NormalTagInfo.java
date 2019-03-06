@@ -102,6 +102,7 @@ public class NormalTagInfo extends AppCompatActivity {
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private Boolean mLocationPermissionsGranted = false;
+
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mCurrentLatlng;
@@ -113,6 +114,9 @@ public class NormalTagInfo extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_normal_tag_info);
+
+//        Toolbar toolbar = findViewById(R.id.my_toolbar);
+//        setSupportActionBar(toolbar);
 
         mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,mTagDeails.getId() +"");
@@ -136,6 +140,8 @@ public class NormalTagInfo extends AppCompatActivity {
                 Log.e(TAG, "Exception cought " + e);
             }
     }
+
+
 
     private void clickListener() {
 
@@ -503,7 +509,7 @@ public class NormalTagInfo extends AppCompatActivity {
                                 Log.e("asd",serverResponse.toString());
                             if(exception!=null)
                                 Log.e("asd",exception.toString());
-                            Toast.makeText(NormalTagInfo.this,"Issue is not reported",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(NormalTagInfo.this,"IssueTable is not reported",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -511,7 +517,7 @@ public class NormalTagInfo extends AppCompatActivity {
                             mProgressDialog.dismiss();
                             String message ="";
                             if(checkValue == 0){
-                                message = "Issue Reported";
+                                message = "IssueTable Reported";
                             }
                             else {
                                 message = "verified";

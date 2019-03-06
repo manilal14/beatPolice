@@ -19,7 +19,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 
 public class IssueAdapter extends RecyclerView.Adapter<IssueAdapter.IssueViewHolder> {
 
-    private final String TAG = "IssueAdapter";
+    private final String TAG = "SyncIssueAdapter";
     private Context mCtx;
     private List<Issues> mIssueList;
 

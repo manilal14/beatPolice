@@ -213,15 +213,6 @@ public class FragmentProfile extends Fragment {
 
     private void clickListener() {
 
-
-        mRootView.findViewById(R.id.back_btn).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mActivity.onBackPressed();
-                //mActivity.loadFragment(new FragmentMap(),true);
-            }
-        });
-
         mRootView.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

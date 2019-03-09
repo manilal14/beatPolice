@@ -71,6 +71,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -215,7 +216,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         //If already alloted, no need to fetch details again;
         if(mSession.isAlloted()) {
-            Log.e(TAG,"alloted history id = "+mSession.getAllotmentDetails().get(KEY_AllOT_HIST_ID));
+            Log.e("hello","alloted history id = "+mSession.getAllotmentDetails().get(KEY_AllOT_HIST_ID));
             mActivity.startService(new Intent(mActivity, MyService.class));
             fetchAllTagsFromDatabase();
             nextOnMapReady();
@@ -226,15 +227,14 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             fetchAllTagsFromDatabase();
         }
 
-
-
-        Log.e(TAG, "called : fetchAllotmentDetails");
+        Log.e("hello", "called : fetchAllotmentDetails");
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, ALLOTEMENT_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
 
-                Log.e(TAG, "allotment details : " + response);
+                Log.e("hello", "allotment details : " + response);
+
 
                 try {
 
@@ -255,15 +255,16 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         //Pick the last alloted area (more than one alloted area may be there)
                         JSONObject jsonObject = jsonArray.getJSONObject(jsonArray.length() - 1);
 
-                        String id       = jsonObject.getString("id");
-                        String a_id     = jsonObject.getString("a_id");
-                        String a_time   = jsonObject.getString("a_time");
-                        String a_name   = jsonObject.getString("a_name");
-                        String a_des    = jsonObject.getString("des");
-                        String a_coord  = jsonObject.getString("coord");
+                        String id        = jsonObject.getString("id");
+                        String a_id      = jsonObject.getString("a_id");
+
+                        String a_time    = jsonObject.getString("a_time");
+
+                        String a_name    = jsonObject.getString("a_name");
+                        String a_des     = jsonObject.getString("des");
+                        String a_coord   = jsonObject.getString("coord");
 
                         mSession.saveAllotmentDetails(id, a_id, a_time, a_name, a_des, a_coord);
-
                         fetchTodo();
                         createAllotmentHistoryRowInDb();
 
@@ -271,7 +272,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Log.e(TAG, "fetchAllotement : exception cought " + e);
+                    Log.e("ert", "fetchAllotement : exception cought " + e);
                 }
 
 
@@ -279,7 +280,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "onErrorResponse :" + error);
+                Log.e("ert", "onErrorResponse :" + error);
             }
         }) {
             @Override
@@ -1352,5 +1353,23 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             recyclerViewTodo.setAdapter(adapter);
         }
     }
+
+
+    private Date getDateFromString(String time){
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+
+        try {
+            return sdf.parse(time);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private boolean compareDate(Date s, Date e, Date today){
+        return s.compareTo(today) * today.compareTo(e) >= 0;
+    }
+
 
 }

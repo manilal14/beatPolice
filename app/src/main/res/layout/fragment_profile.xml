@@ -15,12 +15,6 @@
         android:background="@color/colorPrimary"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/back_btn"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/back"/>
 
         <TextView
             android:layout_width="0dp"
@@ -37,9 +31,9 @@
             android:layout_height="wrap_content"
             android:text="Logout"
             android:layout_marginRight="16sp"
-            android:fontFamily="@font/montserrat_regular"
+            android:fontFamily="@font/montserrat_semi_bold"
             android:textColor="@color/white"
-            android:textSize="14sp"/>
+            android:textSize="16sp"/>
 
 
 

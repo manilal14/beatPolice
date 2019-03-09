@@ -24,10 +24,11 @@ import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.example.mani.beatpolice.CommonPackage.MyInterface;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
-import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueDao;
-import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueTable;
+import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueDao;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueTable;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
 import net.gotev.uploadservice.ServerResponse;
@@ -47,6 +48,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedDate;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedTime;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 
 public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.IssueViewHolder> {
 
@@ -86,7 +88,7 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
         holder.tv_from.setText(getFormattedDate(TAG,issue.getFrom())+" "+getFormattedTime(TAG,issue.getFrom()));
         holder.tv_to.setText(getFormattedDate(TAG,issue.getTo())+" "+getFormattedTime(TAG,issue.getTo()));
 
-        if(!issue.getImagePath().equals("null")){
+        if(issue.getImagePath() != null){
             Log.e(TAG,"a="+issue.getImagePath());
             Glide.with(mCtx)
                     .load(issue.getImagePath())
@@ -108,8 +110,8 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
         holder.tv_sync.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(issue.getImagePath().equals("null"))
-                    syncTodoWithoutImage(issue);
+                if(issue.getImagePath() == null)
+                    syncIssueWithoutImage(issue);
                 else
                     syncIssueWithImage(issue);
             }
@@ -161,12 +163,12 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
         dialog.show().getWindow().getAttributes().windowAnimations = R.style.up_down;
     }
 
-    private void syncTodoWithoutImage(final IssueTable issue) {
+    private void syncIssueWithoutImage(final IssueTable issue) {
 
         mProgressDialog.show();
         Log.e(TAG,"called : syncTodo");
 
-        final String SYNC_URL = BASE_URL + "syncIssueWithoutImage.php";
+        final String SYNC_URL = BASE_URL + "syncIssueWithoutImage1.php";
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, SYNC_URL, new Response.Listener<String>() {
             @Override
@@ -200,14 +202,17 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String,String> params = new HashMap<>();
 
-                params.put("p_id",issue.getPId());
+                String allotId = new LoginSessionManager(mCtx).getAllotmentDetails().get(KEY_ALLOT_ID);
+
+                params.put("allot_id",allotId);
                 params.put("a_id",issue.getAId());
-                params.put("issue_type",issue.getIssueType());
+                params.put("issue_id",issue.getIssueType());
+                params.put("des",issue.getDes());
                 params.put("from",issue.getFrom());
                 params.put("to",issue.getTo());
                 params.put("reported_at_time",issue.getReportedAtTime());
                 params.put("reported_at_location",issue.getReportedAtLocation());
-                params.put("des",issue.getDes());
+
                 params.put("lat",issue.getLocationLatitude());
                 params.put("lon",issue.getLocationLongitude());
 
@@ -243,16 +248,16 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
 
         Log.e(TAG,"called : syncIssueWithImage");
 
-        final String SYNC_URL_WITH_IMAGE = BASE_URL + "syncIssueWithImage.php";
-
+        String allotId = new LoginSessionManager(mCtx).getAllotmentDetails().get(KEY_ALLOT_ID);
+        final String SYNC_URL_WITH_IMAGE = BASE_URL + "syncIssueWithImage1.php";
         try {
             new MultipartUploadRequest(mCtx,SYNC_URL_WITH_IMAGE)
 
                     .addFileToUpload(issue.getImagePath(),"image")
 
-                    .addParameter("p_id",issue.getPId())
+                    .addParameter("allot_id",allotId)
                     .addParameter("a_id",issue.getAId())
-                    .addParameter("issue_type",issue.getIssueType())
+                    .addParameter("issue_id",issue.getIssueType())
                     .addParameter("from",issue.getFrom())
                     .addParameter("to",issue.getTo())
                     .addParameter("reported_at_time",issue.getReportedAtTime())

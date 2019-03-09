@@ -101,6 +101,8 @@ public class IssueReportPage extends AppCompatActivity implements AddressDialog.
     private LatLng mSelectedLatlng;
 
     private String mCurrentPhotoPath;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -206,6 +208,10 @@ public class IssueReportPage extends AppCompatActivity implements AddressDialog.
                 Long currentUnix = System.currentTimeMillis()/1000;
 
                 String reportedAtLocation = String.valueOf(mDeviceLocation.latitude)+","+String.valueOf(mDeviceLocation.longitude);
+
+
+
+                Log.e(TAG,"currentPhotoPath to send "+mCurrentPhotoPath);
 
 
                 IssueTable issue = new IssueTable(policeId,areaId,issueType,String.valueOf(mUnixFrom), String.valueOf(mUnixTo),
@@ -432,13 +438,16 @@ public class IssueReportPage extends AppCompatActivity implements AddressDialog.
             Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
             if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+
                 File photoFile = null;
+
                 try {
-                    photoFile = createImageFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.e(TAG,"file for image is not created");
-                }
+                        photoFile = createImageFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.e(TAG,"file for image is not created");
+                    }
+
 
                 if(photoFile!=null){
                     Uri fileUri = FileProvider.getUriForFile(IssueReportPage.this,"com.example.mani.beatpolice.provider",photoFile);
@@ -455,8 +464,8 @@ public class IssueReportPage extends AppCompatActivity implements AddressDialog.
         if (requestCode != RESULT_CANCELED) {
 
             if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
-                ImageView imageView = findViewById(R.id.imageview);
 
+                ImageView imageView = findViewById(R.id.imageview);
                 Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
                 compressImage(bitmap);
                 Glide.with(IssueReportPage.this)
@@ -475,12 +484,17 @@ public class IssueReportPage extends AppCompatActivity implements AddressDialog.
         File storageDir       = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File imageFile        = File.createTempFile(imageFileName, ".jpg", storageDir);
 
-        mCurrentPhotoPath = imageFile.getAbsolutePath();
-        Log.e(TAG,"currentPhotoPath = "+mCurrentPhotoPath);
+        mCurrentPhotoPath     = imageFile.getAbsolutePath();
+        Log.e(TAG,"currentPhotoPath alloted = "+mCurrentPhotoPath);
         return imageFile;
     }
 
     private void compressImage(Bitmap bitmap) {
+
+        if(bitmap == null){
+            Log.e(TAG,"bitmap is null while compressing");
+            return;
+        }
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 18, bos);

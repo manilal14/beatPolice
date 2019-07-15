@@ -55,8 +55,7 @@ public class LoginPage extends AppCompatActivity {
         mProgressDialog.setMessage("Please wait");
 
         mSession = new LoginSessionManager(LoginPage.this);
-        
-        getMobileUniqueNumber();
+
 
         TextView login = findViewById(R.id.login);
         login.setOnClickListener(new View.OnClickListener() {
@@ -67,9 +66,6 @@ public class LoginPage extends AppCompatActivity {
         });
     }
 
-    private void getMobileUniqueNumber() {
-
-    }
 
     private void verifyCredentials() {
 

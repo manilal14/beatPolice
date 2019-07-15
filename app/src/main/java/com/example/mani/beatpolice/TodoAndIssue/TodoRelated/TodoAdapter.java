@@ -19,6 +19,7 @@ import com.example.mani.beatpolice.R;
 import java.util.List;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.isCurrentTimeBetweenAllotedTime;
+import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.sendNavigateIntent;
 
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder> {
 
@@ -43,6 +44,17 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
 
         final SimpleTodoTable simpleTodo = mSimpleTodoList.get(i);
 
+        final String lat = simpleTodo.getLat();
+        final String lon = simpleTodo.getLon();
+
+        if(lat.equals("") || lon.equals("")){
+            holder.tv_navigate.setVisibility(View.GONE);
+        }
+
+        else{
+            holder.tv_navigate.setVisibility(View.VISIBLE);
+        }
+
 
         if(simpleTodo.isChecked() == true) {
             holder.ll_page.setBackgroundColor(ContextCompat.getColor(mCtx, R.color.green_light));
@@ -58,7 +70,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
         holder.tv_des.setText(simpleTodo.getDes());
 
 
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
+        holder.iv_arrow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -71,6 +83,15 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
                 else {
                     Toast.makeText(mCtx,"Permission denied",Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        holder.tv_navigate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                sendNavigateIntent(mCtx,Double.parseDouble(lat),Double.parseDouble(lon));
+
             }
         });
     }
@@ -87,6 +108,8 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
         ImageView iv_arrow;
         CardView cardView;
 
+        TextView tv_navigate;
+
         public TodoViewHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -94,6 +117,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.TodoViewHolder
             tv_title = itemView.findViewById(R.id.title);
             tv_des   = itemView.findViewById(R.id.des);
             iv_arrow = itemView.findViewById(R.id.arrow);
+
+            tv_navigate = itemView.findViewById(R.id.navigate);
+
 
             cardView = itemView.findViewById(R.id.cardview);
 

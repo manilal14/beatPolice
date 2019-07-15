@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -17,10 +18,12 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.ndk.CrashlyticsNdk;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.FCMPackage.SharedPrefFcm;
-import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueReportPage;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.TodoAndIssue.IssueRelated.IssueReportPage;
 import com.example.mani.beatpolice.TodoAndIssue.SyncRelated.SyncHomePage;
 
 import org.json.JSONArray;
@@ -29,9 +32,12 @@ import org.json.JSONException;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric.sdk.android.Fabric;
+
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 public class HomePage extends AppCompatActivity  {
@@ -50,8 +56,8 @@ public class HomePage extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        Log.e(TAG, "Crashlytics is initialised");
-//        Fabric.with(this, new Crashlytics(), new CrashlyticsNdk());
+        Log.e(TAG, "Crashlytics is initialised");
+        Fabric.with(this, new Crashlytics(), new CrashlyticsNdk());
 
         setContentView(R.layout.activity_home_page);
         Log.e(TAG, "called : onCreate");
@@ -91,7 +97,19 @@ public class HomePage extends AppCompatActivity  {
 
                 switch (id){
                     case R.id.nav_home: loadFragment(mFragmentMap,false); return true;
-                    case R.id.nav_report_issue: startActivity(new Intent(HomePage.this,IssueReportPage.class)); return true;
+                    case R.id.nav_report_issue:
+
+                        if(!mSession.isAlloted()){
+                            Toast.makeText(HomePage.this,"Not allotted",Toast.LENGTH_SHORT).show();
+                            return false;
+                        }
+                        if(!isCurrentTimeBetweenAllotedTime()){
+                            Toast.makeText(HomePage.this,"Permission denied",Toast.LENGTH_SHORT).show();
+                            return false;
+                        }
+
+
+                        startActivity(new Intent(HomePage.this,IssueReportPage.class)); return true;
                     case R.id.nav_sync: startActivity(new Intent(HomePage.this,SyncHomePage.class));return true;
                     case R.id.nav_profile: loadFragment(mFragmentProfile,true);return true;
                 }
@@ -191,6 +209,42 @@ public class HomePage extends AppCompatActivity  {
 
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(this).addToRequestQueue(stringRequest);
+    }
+
+
+    private boolean isCurrentTimeBetweenAllotedTime() {
+
+        String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
+
+        if(aTime.equals("")){
+            Log.e(TAG,"aTime is empty");
+            return false;
+        }
+
+
+        String[] s2;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s2 = aTime.split(",");
+
+            sTime = Long.valueOf(s2[0]);
+            eTime = Long.valueOf(s2[1]);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception cought 2");
+        }
+
+        long currUnixTime = System.currentTimeMillis() / 1000L;
+
+
+        if (!(currUnixTime >= sTime && currUnixTime <= eTime))
+            return false;
+
+
+        return true;
+
     }
 
 

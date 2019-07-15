@@ -28,6 +28,7 @@ public class TodoTable {
 
     public TodoTable(int todoId, String pId, String aId,String title,String tagType, String from,
                      String to, String reportedAt, String imagePath, String des, String reportedAtLat, String reportedAtLon) {
+
         this.todoId = todoId;
         this.pId = pId;
         this.aId = aId;

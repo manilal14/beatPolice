@@ -64,6 +64,8 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AREA;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AllOT_HIST_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_DATE_END;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_DATE_START;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_NAME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PHONE;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_PIC;
@@ -120,6 +122,7 @@ public class FragmentProfile extends Fragment {
         EditText et_name       = mRootView.findViewById(R.id.name);
         final EditText et_pass = mRootView.findViewById(R.id.password);
         TextView et_area       = mRootView.findViewById(R.id.area);
+        TextView tv_date       = mRootView.findViewById(R.id.a_date);
         TextView et_time       = mRootView.findViewById(R.id.a_time);
         EditText et_phone      = mRootView.findViewById(R.id.phone);
 
@@ -129,19 +132,21 @@ public class FragmentProfile extends Fragment {
 
         String aArea = mSession.getAllotmentDetails().get(KEY_AREA);
 
-        Log.e(TAG,"aArea - "+aArea);
 
         if(aArea.equals(""))
-            et_area.setText("Not Alloted");
+            et_area.setText("Not Allotted");
         else
             et_area.setText(aArea);
 
+        String dateFrom =  mSession.getAllotmentDetails().get(KEY_DATE_START);
+        String dateTo   =  mSession.getAllotmentDetails().get(KEY_DATE_END);
 
-        String aTime = "Not Alloted";
 
+        String dateRange = "From: "+dateFrom +"  To: "+dateTo;
+        tv_date.setText(dateRange);
+
+        String aTime = "Not Allotted";
         String a_time =  mSession.getAllotmentDetails().get(KEY_A_TIME);
-
-        Log.e(TAG," a_time - "+a_time);
 
         if(a_time.contains(",")){
             try{
@@ -150,7 +155,7 @@ public class FragmentProfile extends Fragment {
                 long sUnix = Long.valueOf(s[0]);
                 long eUnix = Long.valueOf(s[1]);
 
-                SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy, hh:mm a");
+                SimpleDateFormat sdf = new java.text.SimpleDateFormat("hh:mm a");
                 Date   sTime = new java.util.Date(sUnix*1000L);
                 String sfd   = sdf.format(sTime);
 

@@ -36,9 +36,17 @@ public class LoginSessionManager {
     public static final String KEY_DES        = "aDes";
     public static final String KEY_COORD      = "aCoord";
 
-    public static final String KEY_AllOT_HIST_ID    = "allotHistId";
+    public static final String KEY_SLOT_ID    = "slotId";
+    public static final String KEY_DIST_ID    = "districtId";
+
+    public static final String KEY_DATE_START  = "dateStart";
+    public static final String KEY_DATE_END    = "dateEnd";
+
+    public static final String KEY_AllOT_HIST_ID  = "allotHistId";
 
     public static final String TODO_UPDATED_ON = "todoUpdatedOn";
+
+
 
 
     public LoginSessionManager(Context context){
@@ -143,7 +151,31 @@ public class LoginSessionManager {
 
     }
 
-    public void saveAllotmentDetails(String id, String a_id, String aTime,String aName,String aDes,String aCoord){
+    public void saveAllotmentDetails(String id, String a_id, String aTime,String aName,String aDes,String aCoord,
+                                     String dateStart, String dateEnd,String slotId, String districtId){
+
+        Log.e("mnb1","Alloted time="+aTime);
+
+        String[] s;
+        long sTime = 0;
+        long eTime = 0;
+
+        try {
+            s = aTime.split(",");
+
+            sTime = Long.valueOf(s[0]);
+            eTime = Long.valueOf(s[1]);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception cought in LoginSessionManager");
+        }
+
+        if(eTime<sTime)
+            eTime = eTime + 24*60*60;
+
+        aTime = sTime+","+eTime;
+        Log.e("mnb2","Alloted time="+aTime);
+
 
         editor.putBoolean(IS_ALLOTED,false);
 
@@ -153,6 +185,9 @@ public class LoginSessionManager {
         editor.putString(KEY_AREA,"");
         editor.putString(KEY_DES,"");
         editor.putString(KEY_COORD,"");
+        editor.putString(KEY_DATE_START,"");
+        editor.putString(KEY_DATE_END,"");
+        editor.putString(KEY_SLOT_ID,"");
 
         Log.e(TAG, "called : saveAllotedDetails");
         editor.putBoolean(IS_ALLOTED,true);
@@ -163,6 +198,13 @@ public class LoginSessionManager {
         editor.putString(KEY_AREA,aName);
         editor.putString(KEY_DES,aDes);
         editor.putString(KEY_COORD,aCoord);
+
+        editor.putString(KEY_DATE_START,dateStart);
+        editor.putString(KEY_DATE_END,dateEnd);
+        editor.putString(KEY_SLOT_ID,slotId);
+
+        editor.putString(KEY_DIST_ID,districtId);
+
 
         editor.commit();
     }
@@ -180,7 +222,16 @@ public class LoginSessionManager {
 
         details.put(KEY_AllOT_HIST_ID, pref.getString(KEY_AllOT_HIST_ID, ""));
 
-        Log.e("check", pref.getString(KEY_ALLOT_ID, "")+" "+pref.getString(KEY_AREA, ""));
+        details.put(KEY_DATE_START, pref.getString(KEY_DATE_START, ""));
+        details.put(KEY_DATE_END, pref.getString(KEY_DATE_END, ""));
+
+        details.put(KEY_SLOT_ID, pref.getString(KEY_SLOT_ID, ""));
+
+        details.put(KEY_DIST_ID, pref.getString(KEY_DIST_ID, ""));
+
+        //details.put(KEY_SLOT_ZERO_TIME_FOR_TODO, pref.getString(KEY_SLOT_ZERO_TIME_FOR_TODO, ""));
+
+       // Log.e("check", pref.getString(KEY_ALLOT_ID, "")+" "+pref.getString(KEY_AREA, ""));
         return  details;
     }
 
@@ -198,5 +249,6 @@ public class LoginSessionManager {
         editor.putString(KEY_AllOT_HIST_ID,id);
         editor.commit();
     }
+
 
 }

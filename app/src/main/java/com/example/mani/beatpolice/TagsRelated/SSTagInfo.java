@@ -167,7 +167,7 @@ public class SSTagInfo extends AppCompatActivity {
                     return;
                 }
 
-                sendReportWithoutImage(0,"Ok",1,1);
+                sendReportWithoutImage("0","Ok",1,1);
             }
         });
 
@@ -352,10 +352,12 @@ public class SSTagInfo extends AppCompatActivity {
                     return;
                 }
 
+                String type = (String) spinnerIssue.getSelectedItem();
+
                 if(mImagePath != null)
-                    sendIssueWithImage(issueType,des,0,mImagePath);
+                    sendIssueWithImage(type,des,0,mImagePath);
                 else {
-                    sendReportWithoutImage(issueType,des,0,2);
+                    sendReportWithoutImage(type,des,0,2);
                 }
                 alertDialog.dismiss();
 
@@ -569,7 +571,7 @@ public class SSTagInfo extends AppCompatActivity {
 
 
     // When image need to be send
-    private void sendIssueWithImage(int issueType, String des, final int checkValue, String imagePath) {
+    private void sendIssueWithImage(String type, String des, final int checkValue, String imagePath) {
 
         Log.e(TAG,"called : sendIssueWithImage");
 
@@ -598,7 +600,7 @@ public class SSTagInfo extends AppCompatActivity {
                     .addParameter("allot_id",allotId)
                     .addParameter("tag_id",tagId)
                     .addParameter("check",check)
-                    .addParameter("issue_id",String.valueOf(issueType))
+                    .addParameter("issue_id",type)
                     .addParameter("des",des)
                     .addParameter("time",time)
                     .addParameter("my_pos",myLocation)
@@ -653,7 +655,7 @@ public class SSTagInfo extends AppCompatActivity {
     }
 
     // Without image, ReportType = 1(for verified), 2(for issue report)
-    private void sendReportWithoutImage(final int issueType, final String des, final int checkValue, final int reportType) {
+    private void sendReportWithoutImage(final String type, final String des, final int checkValue, final int reportType) {
 
         mProgressDialog.show();
 
@@ -701,7 +703,7 @@ public class SSTagInfo extends AppCompatActivity {
                 params.put("allot_id",allotId);
                 params.put("tag_id",tagId);
                 params.put("check",String.valueOf(checkValue));
-                params.put("issue_id",String.valueOf(issueType));
+                params.put("issue_id",type);
                 params.put("des",des);
                 params.put("time",time);
                 params.put("my_pos", finalMyLocation);

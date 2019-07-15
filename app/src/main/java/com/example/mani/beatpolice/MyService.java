@@ -24,14 +24,14 @@ import java.util.Map;
 
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.BASE_URL;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.NO_OF_RETRY;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
-import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AllOT_HIST_ID;
 
 public class MyService extends Service {
 
     private static final String TAG = "MyService";
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 60*1000;
+    private static final int LOCATION_INTERVAL = 30*1000;
     private static final float LOCATION_DISTANCE = 0;
 
     private class LocationListener implements android.location.LocationListener
@@ -174,11 +174,12 @@ public class MyService extends Service {
 
         Log.e(TAG,"called : sendToDatabase");
 
-        final String allotHistId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_AllOT_HIST_ID);
+        //final String allotHistId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_AllOT_HIST_ID);
+        final String allotId = new LoginSessionManager(getApplicationContext()).getAllotmentDetails().get(KEY_ALLOT_ID);
 
-        Log.e(TAG,"called : "+allotHistId);
+        Log.e(TAG,"alloId=: "+allotId);
 
-        final String pos = "[" +latitude+","+longitude+",";
+        final String pos = latitude+","+longitude+",";
 
         String SEND_URL = BASE_URL + "sent_periodic_location.php";
 
@@ -197,7 +198,8 @@ public class MyService extends Service {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String, String> params = new HashMap<>();
-                params.put("allot_hist_id",allotHistId);
+                //params.put("allot_hist_id",allotHistId);
+                params.put("allot_id",allotId);
                 params.put("pos",pos);
                 return params;
             }
@@ -206,8 +208,6 @@ public class MyService extends Service {
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(3*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
     }
-
-
     private boolean isCurrentTimeBetweenAllotedTime() {
         LoginSessionManager session = new LoginSessionManager(getApplicationContext());
         String aTime = session.getAllotmentDetails().get(KEY_A_TIME);

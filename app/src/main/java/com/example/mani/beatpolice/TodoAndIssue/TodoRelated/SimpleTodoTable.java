@@ -16,6 +16,7 @@ public class SimpleTodoTable implements Serializable {
     private String lat;
     private String lon;
 
+
     private boolean isChecked;
 
     public SimpleTodoTable(int id, String title, String des, String lat, String lon) {
@@ -24,6 +25,9 @@ public class SimpleTodoTable implements Serializable {
         this.des = des;
         this.lat = lat;
         this.lon = lon;
+
+
+
     }
 
     public int getId() {

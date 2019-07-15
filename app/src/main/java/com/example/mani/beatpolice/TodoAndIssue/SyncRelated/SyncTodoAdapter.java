@@ -24,6 +24,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.bumptech.glide.Glide;
 import com.example.mani.beatpolice.CommonPackage.MyInterface;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
+import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
 import com.example.mani.beatpolice.R;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
 import com.example.mani.beatpolice.TodoAndIssue.TodoRelated.TodoTable;
@@ -38,6 +39,8 @@ import net.gotev.uploadservice.UploadStatusDelegate;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,7 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.RETRY_SECONDS;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedDate;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedTime;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_SLOT_ID;
 
 public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTodoViewHolder> {
 
@@ -86,7 +90,7 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
         holder.tv_from.setText(getFormattedDate(TAG,todo.getFrom())+" "+getFormattedTime(TAG,todo.getFrom()));
         holder.tv_to.setText(getFormattedDate(TAG,todo.getTo())+" "+getFormattedTime(TAG,todo.getTo()));
 
-        if(!todo.getImagePath().equals("null")){
+        if(todo.getImagePath()!=null){
             Log.e(TAG,"a="+todo.getImagePath());
             Glide.with(mCtx)
                     .load(todo.getImagePath())
@@ -108,7 +112,7 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
         holder.tv_sync.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(todo.getImagePath().equals("null"))
+                if(todo.getImagePath()==null)
                     syncTodoWithoutImage(todo);
                 else
                     syncTodoWithImage(todo);
@@ -198,6 +202,18 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String,String> params = new HashMap<>();
 
+                String slotId = new LoginSessionManager(mCtx).getAllotmentDetails().get(KEY_SLOT_ID);
+
+                long unixMilli = Long.parseLong(todo.getReportedAt())*1000L;
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+
+                Date date         = new java.util.Date(unixMilli);
+                String dateString = sdf.format(date);
+
+                Log.e("df",slotId+" "+dateString);
+
+
+
                 params.put("todo_id", String.valueOf(todo.getTodoId()));
                 params.put("p_id",todo.getPId());
                 params.put("a_id",todo.getAId());
@@ -209,6 +225,8 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
                 params.put("lat",todo.getReportedAtLat());
                 params.put("lon",todo.getReportedAtLon());
 
+                params.put("slot",slotId);
+                params.put("date",dateString);
                 return params;
             }
         };
@@ -246,6 +264,13 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
 
         Log.e(TAG,"called : syncTodoWithImage");
 
+        String slotId = new LoginSessionManager(mCtx).getAllotmentDetails().get(KEY_SLOT_ID);
+
+        long unixMilli = Long.parseLong(todo.getReportedAt())*1000L;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Date date         = new java.util.Date(unixMilli);
+        String dateString = sdf.format(date);
+
         final String SYNC_URL_WITH_IMAGE = BASE_URL + "syncTodoWithImage.php";
 
         try {
@@ -263,6 +288,9 @@ public class SyncTodoAdapter extends RecyclerView.Adapter<SyncTodoAdapter.SyncTo
                     .addParameter("des",todo.getDes())
                     .addParameter("lat",todo.getReportedAtLat())
                     .addParameter("lon",todo.getReportedAtLon())
+                    .addParameter("slot",slotId)
+                    .addParameter("date",dateString)
+
 
                     .setNotificationConfig(new UploadNotificationConfig())
                     .setMaxRetries(2)

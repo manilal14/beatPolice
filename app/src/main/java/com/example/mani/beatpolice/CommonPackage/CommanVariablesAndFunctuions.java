@@ -1,6 +1,8 @@
 package com.example.mani.beatpolice.CommonPackage;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
 import com.example.mani.beatpolice.GPSTracker;
@@ -133,6 +135,16 @@ public class CommanVariablesAndFunctuions {
 
         return true;
 
+    }
+
+    public static void sendNavigateIntent(Context context, double latitude, double longitude){
+
+        String uri = "google.navigation:q="+latitude+","+longitude;
+
+        Uri gmmIntentUri = Uri.parse(uri);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        context.startActivity(mapIntent);
     }
 }
 

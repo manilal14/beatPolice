@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -71,11 +70,8 @@ public class AddTag extends AppCompatActivity {
     private LatLng mTaggedLocation;
     private String mDate;
     private String mTime;
-//
-//    private String mImagePath;
-//    private File file;
-//    private Uri fileUri;
-    private String mImageName;
+
+
 
     private ProgressDialog mProgressDialog;
     private LoginSessionManager mSession;
@@ -94,6 +90,8 @@ public class AddTag extends AppCompatActivity {
 
 
     private String mCurrentPhotoPath;
+    private String mImageName;
+    private boolean mIsPicClicked = false;
 
 
     @Override
@@ -171,6 +169,7 @@ public class AddTag extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                mIsPicClicked = false;
 
                 if (checkSelfPermission(Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
@@ -190,14 +189,6 @@ public class AddTag extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-
-//                        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
-//                        mImageName = allotId+String.valueOf(System.currentTimeMillis()) + ".jpg";
-//                        file = new File(AddTag.this.getExternalCacheDir(), mImageName);
-//                        fileUri = FileProvider.getUriForFile(AddTag.this,"com.example.mani.beatpolice.provider",file);
-//                        Log.e(TAG,"mFileUri "+fileUri.toString());
-//                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-//                        startActivityForResult(cameraIntent, CAMERA_REQUEST);
 
                         File photoFile = null;
                         try {
@@ -287,7 +278,7 @@ public class AddTag extends AppCompatActivity {
                     }
                 }
                 Log.e(TAG,"mCurrentPhotoPath is "+mCurrentPhotoPath);
-                if(mCurrentPhotoPath == null){
+                if(!mIsPicClicked){
                     Toast.makeText(AddTag.this,getString(R.string.image_is_),Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -304,6 +295,8 @@ public class AddTag extends AppCompatActivity {
         if (requestCode != RESULT_CANCELED) {
 
             if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+
+                mIsPicClicked = true;
 
                 ImageView imageView = findViewById(R.id.image);
 
@@ -340,7 +333,6 @@ public class AddTag extends AppCompatActivity {
         t_n_name = n_name;
         t_n_phone = n_phone;
 
-        Log.e(TAG,"imgName = "+mImageName);
 
         try {
 
@@ -485,7 +477,7 @@ public class AddTag extends AppCompatActivity {
 
         String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
         mImageName     = allotId+String.valueOf(System.currentTimeMillis())+".jpg";
-        File storageDir   = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        //File storageDir   = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File imageFile    = new File(AddTag.this.getExternalCacheDir(), mImageName);
 
         mCurrentPhotoPath = imageFile.getAbsolutePath();

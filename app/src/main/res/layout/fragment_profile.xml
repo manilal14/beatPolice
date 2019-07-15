@@ -145,6 +145,20 @@
                     style="@style/text_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:text="Alloted Date" />
+
+                <TextView
+                    android:id="@+id/a_date"
+                    style="@style/text_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="12/11/0000"/>
+
+                <TextView
+                    android:layout_marginTop="@dimen/margin_between_views"
+                    style="@style/text_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="Alloted Time" />
 
                 <TextView

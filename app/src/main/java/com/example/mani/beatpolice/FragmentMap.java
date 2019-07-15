@@ -42,6 +42,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.example.mani.beatpolice.CommonPackage.MySingleton;
 import com.example.mani.beatpolice.LoginRelated.LoginSessionManager;
+import com.example.mani.beatpolice.LoginRelated.SharedPrefTodo;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
@@ -90,6 +91,8 @@ import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_A_TIME;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_AllOT_HIST_ID;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_COORD;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_DATE_END;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_DATE_START;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 
@@ -141,11 +144,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         shouldExecuteOnResume = false;
 
         Log.e(TAG, "Called : onCreate");
-        //mActivity.getSupportActionBar().hide();
         mSession = new LoginSessionManager(getActivity());
 
-        mAreaTagList = new ArrayList<>();
-        mTagList = new ArrayList<>();
+        mAreaTagList    = new ArrayList<>();
+        mTagList        = new ArrayList<>();
         mSimpleTodoList = new ArrayList<>();
 
         if(mSession.isAlloted())
@@ -211,8 +213,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     }
 
-    private void fetchAllotmentDetails()
-    {
+    private void fetchAllotmentDetails() {
 
         //If already alloted, no need to fetch details again;
         if(mSession.isAlloted()) {
@@ -227,14 +228,16 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             fetchAllTagsFromDatabase();
         }
 
+        Log.e(TAG,"fetch allotment details");
+
+        fetchAllTagsFromDatabase();
         Log.e("hello", "called : fetchAllotmentDetails");
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, ALLOTEMENT_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
 
-                Log.e("hello", "allotment details : " + response);
-
+                Log.e(TAG, "allotment details : " + response);
 
                 try {
 
@@ -246,9 +249,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
                     if (rc <= 0) {
                         Log.e(TAG, "fetchAllotmentDetails : " + mess);
-                        //mSession.clearAllotedArea();
-                        //mActivity.stopService(new Intent(mActivity, MyService.class));
-                        //new ClearAreaTagTable(BeatPoliceDb.getInstance(mActivity)).execute();
 
                     } else {
 
@@ -264,8 +264,30 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
                         String a_des     = jsonObject.getString("des");
                         String a_coord   = jsonObject.getString("coord");
 
-                        mSession.saveAllotmentDetails(id, a_id, a_time, a_name, a_des, a_coord);
+                        String dateStart = jsonObject.getString("date_start");
+                        String dateEnd   = jsonObject.getString("date_end");
+
+                        String slotId   = jsonObject.getString("slot_id");
+
+                        String districtId  = jsonObject.getString("district_id");
+
+                        String s[];
+                        String unixAllotedTime = "";
+
+                        try{
+                            s = a_time.split(",");
+                            long sUnix = getUnixTimeFromString(s[0]);
+                            long eUnix = getUnixTimeFromString(s[1]);
+                            unixAllotedTime = sUnix+","+eUnix;
+
+                        }catch (Exception e){
+                            Log.e(TAG,"Exception cought while conveting time to unix");
+                        }
+
+
+                        mSession.saveAllotmentDetails(id, a_id, unixAllotedTime, a_name, a_des, a_coord,dateStart,dateEnd,slotId, districtId);
                         fetchTodo();
+
                         createAllotmentHistoryRowInDb();
 
                     }
@@ -400,13 +422,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     private void nextOnMapReady() {
 
-        //fetchAllTagsFromDatabase();
-
-//        if (!mSession.isAlloted()) {
-//            Log.e(TAG, "Session not alloted");
-//            return;
-//        }
-
         Log.e(TAG, "called : FetchTagsFromRoom1");
         new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
 
@@ -418,12 +433,18 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         if (!isCurrentTimeBetweenAllotedTime()) {
 
-            Log.e(TAG, "time is out of range 1");
+            Log.e(TAG, "time is out of range 1qw");
 
             if(isAllotedTimeOver()){
-                // Clearing allotment details and setting flag in allotment to 1
-                Log.e("a","allotement time is over");
-                setAllotementFlag();
+                String dateEnd = mSession.getAllotmentDetails().get(KEY_DATE_END);
+                if(getTodaysDate().equals(dateEnd)){
+
+                    Log.e(TAG,"t="+getTodaysDate()+" e="+dateEnd);
+
+                    // Clearing allotment details and setting flag in allotment to 1
+                    Log.e(TAG,"allotement time is over");
+                    setAllotementFlag();
+                }
             }
             return;
         }
@@ -490,7 +511,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(RETRY_SECONDS*1000,NO_OF_RETRY,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         MySingleton.getInstance(mActivity).addToRequestQueue(stringRequest);
     }
-
 
     private void markerClickListener() {
 
@@ -617,7 +637,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
 
     }
-
 
     private void fetchAllTagsFromDatabase() {
 
@@ -751,7 +770,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
         Log.e(TAG,"called onResume");
 
-
         if (shouldExecuteOnResume) {
             Log.e(TAG, "called : onResume, FetchTagsFromRoom2");
             new FetchTagsFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
@@ -760,7 +778,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
 
         if(!mSession.isAlloted()){
-            Log.e("zxc", "session is not alloted hence cant fetch todo");
+            Log.e(TAG, "session is not alloted hence cant fetch todo");
             return;
         }
 
@@ -769,19 +787,29 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     private void fetchTodo() {
 
-        //Fetch only one time in single day
-        Date date = new Date();
-        SimpleDateFormat sdf = new java.text.SimpleDateFormat(SIMPLE_DATE_FORMAT);
-        String today = sdf.format(date);
+        String slotStart = SharedPrefTodo.getmInstance(getActivity()).getZeroTimeSlotForTodo();
 
-        if(today.equals(mSession.getTodoUpdateDate())){
-            Log.e("zxc","fetching directly from room and updating the adapter");
+        Log.e("asdfgh",slotStart);
+        //fetchTodoListAndShow();
+
+        if(slotStart.equals("")){
+            fetchTodoListAndShow();
+            return;
+        }
+
+        long slotZeroStart = Long.parseLong(slotStart);
+        long slotEnd = slotZeroStart + (24*60*60);
+        long curr = System.currentTimeMillis()/1000;
+
+        if(curr < slotEnd){
+            Log.e("asdfg","fetching todo directly from room and updating the adapter");
             new FetchSimpleTodoFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         }
-        else{
-            //Simpletodo fetching from database and saving to room then again fetching from room and updating the adapter
+        else {
             fetchTodoListAndShow();
         }
+
+
     }
 
 
@@ -810,8 +838,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     private void callphpToRelivedThePolice() {
 
-        mProgressBar.setVisibility(View.VISIBLE)
-        ;
+        mProgressBar.setVisibility(View.VISIBLE);
         String MY_URL = BASE_URL + "relievedThePolice.php";
 
         StringRequest stringRequest = new StringRequest(Request.Method.POST, MY_URL, new Response.Listener<String>() {
@@ -979,7 +1006,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
 
     private boolean isCurrentTimeBetweenAllotedTime() {
 
+        Log.e(TAG,"Called  : isCurrentTimeBetweenAllotedTime");
+
         String aTime = mSession.getAllotmentDetails().get(KEY_A_TIME);
+
+        Log.e(TAG,"AllotedTime="+aTime);
 
         String[] s2;
         long sTime = 0;
@@ -996,6 +1027,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
 
         long currUnixTime = System.currentTimeMillis() / 1000L;
+
+        Log.e(TAG,"cuurentUnix="+currUnixTime);
 
 
         if (!(currUnixTime >= sTime && currUnixTime <= eTime))
@@ -1174,6 +1207,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         }
     }
 
+
     class ClearAreaTagTable extends AsyncTask<Void, Void, Void> {
 
         private final AreaTagTableDao areaTagTableDao;
@@ -1201,6 +1235,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             @Override
             public void onClick(View v) {
                 v.setVisibility(View.GONE);
+
+                //fetchTodo();
 
                 LinearLayout layout = mRootView.findViewById(R.id.todo_layout);
 
@@ -1234,49 +1270,70 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
         Log.e(TAG,"fetchTodoListAndShow");
         String FETCH_URL = BASE_URL + "fetchTodoList.php";
 
+        mProgressBar.setVisibility(View.VISIBLE);
+
         StringRequest stringRequest = new StringRequest(Request.Method.POST, FETCH_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.e("zxc","response for fetchTodoListAndShow "+response);
+                Log.e(TAG,"response for fetchTodoListAndShow "+response);
+
+                mProgressBar.setVisibility(View.GONE);
 
                 try {
                     JSONArray jsonArray = new JSONArray(response);
-                    int rc = Integer.parseInt(jsonArray.getJSONObject(0).getString("response_code"));
+                    int rc = Integer.parseInt(jsonArray.getJSONObject(1).getString("response_code"));
 
                     if(rc<=0){
-                        String mess = jsonArray.getJSONObject(0).getString("message");
+                        String mess = jsonArray.getJSONObject(1).getString("message");
                         Log.e(TAG,mess);
                         return;
                     }
 
-                    for(int i =1;i<jsonArray.length();i++){
+                    if(mSimpleTodoList.size()>0)
+                        mSimpleTodoList.clear();
+
+                    for(int i=2;i<jsonArray.length();i++){
 
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
 
                         int id = Integer.parseInt(jsonObject.getString("id"));
                         String title = jsonObject.getString("todo");
-                        String des = jsonObject.getString("des");
-                        String lat =  jsonObject.getString("lat");
-                        String lon = jsonObject.getString("lon");
+                        String des   = jsonObject.getString("des");
+                        String lat   = jsonObject.getString("lat");
+                        String lon   = jsonObject.getString("lon");
 
                         mSimpleTodoList.add(new SimpleTodoTable(id,title,des,lat,lon));
 
                     }
 
-                    Log.e("zxc","savingSimpleTodoToRoom");
+
+                    String slotTime = jsonArray.getJSONObject(0).getString("slot");
+
+                    //slot time will gave <start,end> time
+                    String s[] = slotTime.split(",");
+                    String dateStart = mSession.getAllotmentDetails().get(KEY_DATE_START);
+
+                    Log.e("asd", ""+ s[0]+" "+ dateStart);
+
+                    long startSlotUnix = getUnixTimeFor24hrs(dateStart,s[0]);
+                    Log.e("check", startSlotUnix+"");
+
+                    SharedPrefTodo.getmInstance(getActivity()).storeZeroSlotTime(startSlotUnix+"");
+
+
                     new SaveSimpleTodoToRoom(BeatPoliceDb.getInstance(mActivity)).execute(mSimpleTodoList);
 
-
-
                 } catch (JSONException e) {
+
                     e.printStackTrace();
-                    Log.e("zxc",e.toString());
+                    Log.e(TAG,e.toString());
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("zxc",error.toString());
+                Log.e(TAG,error.toString());
+                mProgressBar.setVisibility(View.GONE);
             }
         }){
 
@@ -1284,10 +1341,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             protected Map<String, String> getParams() throws AuthFailureError {
                 HashMap<String,String> params =  new HashMap<>();
                 String aId = mSession.getAllotmentDetails().get(KEY_A_ID);
-                if(aId.equals("")){
-                    Log.e("zxc", "area is not alloted yet");
-                    aId = "1";
-                }
                 params.put("a_id",aId);
                 return params;
             }
@@ -1320,7 +1373,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
             String today = sdf.format(date);
             mSession.setTodoUpdatedate(today);
 
-            Log.e("zxc","fetchSimpleTodoFromRoom");
+            Log.e(TAG,"fetchSimpleTodoFromRoom");
             new FetchSimpleTodoFromRoom(BeatPoliceDb.getInstance(mActivity)).execute();
         }
     }
@@ -1355,21 +1408,46 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback {
     }
 
 
-    private Date getDateFromString(String time){
+    private long getUnixTimeFromString(String time){
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        String dateToday  =  getTodaysDate();
+
+        SimpleDateFormat sdf2 = new SimpleDateFormat("dd-MM-yyyy hh:mm a");
 
         try {
-            return sdf.parse(time);
+            Date date = sdf2.parse(dateToday+" "+time);
+            return date.getTime()/1000;
+
         } catch (ParseException e) {
             e.printStackTrace();
-            return null;
+            return 0;
         }
     }
 
-    private boolean compareDate(Date s, Date e, Date today){
-        return s.compareTo(today) * today.compareTo(e) >= 0;
+    private String getTodaysDate(){
+
+        Date today = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        String dateToday = sdf.format(today);
+        return dateToday;
+
     }
+
+    private long getUnixTimeFor24hrs(String date, String time){
+
+        SimpleDateFormat sdf2 = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+
+        try {
+            Date date2 = sdf2.parse(date+" "+time);
+            return date2.getTime()/1000;
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+
 
 
 }

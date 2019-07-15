@@ -3,16 +3,17 @@ package com.example.mani.beatpolice.TagsRelated;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -54,7 +55,6 @@ import com.example.mani.beatpolice.ReportHistory;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTable;
 import com.example.mani.beatpolice.RoomDatabase.AreaTagTableDao;
 import com.example.mani.beatpolice.RoomDatabase.BeatPoliceDb;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.gotev.uploadservice.MultipartUploadRequest;
@@ -67,7 +67,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,20 +106,21 @@ public class NormalTagInfo extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private Boolean mLocationPermissionsGranted = false;
 
-    private FusedLocationProviderClient mFusedLocationProviderClient;
+    //private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private LatLng mCurrentLatlng;
     private ProgressDialog mProgressDialog;
 
     int flag = 0;
 
+    private String mCurrentPhotoPath;
+    private LoginSessionManager mSession;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_normal_tag_info);
 
-//        Toolbar toolbar = findViewById(R.id.my_toolbar);
-//        setSupportActionBar(toolbar);
 
         mTagDeails = (AreaTagTable) getIntent().getExtras().getSerializable("tagInfo");
         Log.e(TAG,mTagDeails.getId() +"");
@@ -125,6 +129,8 @@ public class NormalTagInfo extends AppCompatActivity {
         mProgressDialog = new ProgressDialog(NormalTagInfo.this);
         mProgressDialog.setMessage("Please wait....");
         mProgressDialog.setCancelable(false);
+
+        mSession = new LoginSessionManager(NormalTagInfo.this);
 
         fetchIssueTypes();
 
@@ -171,7 +177,7 @@ public class NormalTagInfo extends AppCompatActivity {
                     Toast.makeText(NormalTagInfo.this,"Already reported",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                sendReportWithoutImage(0,"Ok",1,1);
+                sendReportWithoutImage("0","Ok",1,1);
             }
         });
 
@@ -288,18 +294,31 @@ public class NormalTagInfo extends AppCompatActivity {
                     Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                     if (cameraIntent.resolveActivity(getPackageManager()) != null) {
 
-                        String allotId = new LoginSessionManager(NormalTagInfo.this).getAllotmentDetails().get(KEY_ALLOT_ID);
+//                        String allotId = new LoginSessionManager(NormalTagInfo.this).getAllotmentDetails().get(KEY_ALLOT_ID);
+//
+//                        File file = new File(NormalTagInfo.this.getExternalCacheDir(),
+//                                allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
+//
+//                        mFileUri = FileProvider.getUriForFile(NormalTagInfo.this,"com.example.mani.beatpolice.provider",file);
+//                        Log.e(TAG,"mFileUri "+mFileUri.toString());
+//
+//                        //mFileUri = Uri.fromFile(file);
+//                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
+//                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
 
-                        File file = new File(NormalTagInfo.this.getExternalCacheDir(),
-                                allotId+String.valueOf(System.currentTimeMillis()) + ".jpg");
+                        File photoFile = null;
+                        try {
+                            photoFile = createImageFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Log.e(TAG,"file for image is not created");
+                        }
 
-                        mFileUri = FileProvider.getUriForFile(NormalTagInfo.this,"com.example.mani.beatpolice.provider",file);
-                        Log.e(TAG,"mFileUri "+mFileUri.toString());
-
-                        //mFileUri = Uri.fromFile(file);
-                         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mFileUri);
-                         startActivityForResult(cameraIntent, CAMERA_REQUEST);
-
+                        if(photoFile!=null){
+                            Uri fileUri = FileProvider.getUriForFile(NormalTagInfo.this,"com.example.mani.beatpolice.provider",photoFile);
+                            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+                        }
                     }
                 }
 
@@ -319,7 +338,7 @@ public class NormalTagInfo extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                int issueType = spinnerIssue.getSelectedItemPosition() + 1;
+                //int issueType = spinnerIssue.getSelectedItemPosition() + 1;
                 String des    = et_des.getText().toString().trim();
 
                 if(des.equals("")){
@@ -327,10 +346,12 @@ public class NormalTagInfo extends AppCompatActivity {
                     return;
                 }
 
+                String type = (String) spinnerIssue.getSelectedItem();
+
                 if(mImagePath != null)
-                    sendIssueWithImage(issueType,des,0,mImagePath);
+                    sendIssueWithImage(type,des,0,mImagePath);
                 else {
-                    sendReportWithoutImage(issueType,des,0,2);
+                    sendReportWithoutImage(type,des,0,2);
                 }
 
                 alertDialog.dismiss();
@@ -353,31 +374,38 @@ public class NormalTagInfo extends AppCompatActivity {
 
             if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
 
-                Uri selectedImage = mFileUri;
-                String path = mFileUri.getPath();
+//                Uri selectedImage = mFileUri;
+//                String path = mFileUri.getPath();
+//
+//                getContentResolver().notifyChange(selectedImage, null);
+//                ContentResolver cr = getContentResolver();
+//
+//                Bitmap bitmap;
+//                File actualPath;
+//
+//                try {
+//                    bitmap = MediaStore.Images.Media
+//                            .getBitmap(cr, selectedImage);
+//
+//                    actualPath = new File(path);
+//                    mImagePath = actualPath.getAbsolutePath();
+//
+//                    ImageView imageView = mDialogView.findViewById(R.id.image);
+//                    imageView.setImageBitmap(bitmap);
+//
+//                    Log.e(TAG, "Actual path : " + mImagePath);
+//
+//                } catch (Exception e) {
+//                    Log.e(TAG,"Exception :"+ e.getMessage());
+//                    e.printStackTrace();
+//                }
 
-                getContentResolver().notifyChange(selectedImage, null);
-                ContentResolver cr = getContentResolver();
-
-                Bitmap bitmap;
-                File actualPath;
-
-                try {
-                    bitmap = MediaStore.Images.Media
-                            .getBitmap(cr, selectedImage);
-
-                    actualPath = new File(path);
-                    mImagePath = actualPath.getAbsolutePath();
-
-                    ImageView imageView = mDialogView.findViewById(R.id.image);
-                    imageView.setImageBitmap(bitmap);
-
-                    Log.e(TAG, "Actual path : " + mImagePath);
-
-                } catch (Exception e) {
-                    Log.e(TAG,"Exception :"+ e.getMessage());
-                    e.printStackTrace();
-                }
+                ImageView imageView = mDialogView.findViewById(R.id.image);
+                Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);
+                compressImage(bitmap);
+                Glide.with(NormalTagInfo.this)
+                        .load(mCurrentPhotoPath)
+                        .into(imageView);
 
             }
         }
@@ -463,7 +491,7 @@ public class NormalTagInfo extends AppCompatActivity {
 
 
     // When image need to be send
-    private void sendIssueWithImage(int issueType, String des, final int checkValue, String imagePath) {
+    private void sendIssueWithImage(String issueType, String des, final int checkValue, String imagePath) {
 
         Log.e(TAG,"called : sendIssueWithImage");
 
@@ -485,7 +513,7 @@ public class NormalTagInfo extends AppCompatActivity {
             mProgressDialog.show();
             new MultipartUploadRequest(NormalTagInfo.this,REPORT_ISSUE_URL)
 
-                    .addFileToUpload(String.valueOf(mFileUri), "image")
+                    .addFileToUpload(mCurrentPhotoPath, "image")
 
                     .addParameter("allot_id",allotId)
                     .addParameter("tag_id",tagId)
@@ -552,15 +580,13 @@ public class NormalTagInfo extends AppCompatActivity {
     }
 
     // Without image, ReportType = 1(for veified), 2(for issue report)
-    private void sendReportWithoutImage(final int issueType, final String des, final int checkValue, final int reportType) {
+    private void sendReportWithoutImage(final String type, final String des, final int checkValue, final int reportType) {
 
         Log.e(TAG,"called : sendReportWithoutImage");
         mProgressDialog.show();
 
         long currUnixTime = System.currentTimeMillis()/1000L;
         final String time = String.valueOf(currUnixTime);
-
-
 
         String myLocation = "na";
         if(mCurrentLatlng !=null){
@@ -601,7 +627,7 @@ public class NormalTagInfo extends AppCompatActivity {
                 params.put("allot_id",allotId);
                 params.put("tag_id",tagId);
                 params.put("check",String.valueOf(checkValue));
-                params.put("issue_id",String.valueOf(issueType));
+                params.put("issue_id",type);
                 params.put("des",des);
                 params.put("time",time);
                 params.put("my_pos", finalMyLocation);
@@ -689,6 +715,40 @@ public class NormalTagInfo extends AppCompatActivity {
 
 
         return true;
+
+    }
+
+    private File createImageFile() throws IOException {
+
+        String allotId = mSession.getAllotmentDetails().get(KEY_ALLOT_ID);
+        String mImageName     = allotId+String.valueOf(System.currentTimeMillis())+".jpg";
+        File storageDir   = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File imageFile    = new File(NormalTagInfo.this.getExternalCacheDir(), mImageName);
+
+        mCurrentPhotoPath = imageFile.getAbsolutePath();
+        Log.e(TAG,"currentPhotoPath = "+mCurrentPhotoPath);
+        Log.e(TAG,"currentPhotoPath = "+mImageName);
+        return imageFile;
+    }
+
+    private void compressImage(Bitmap bitmap) {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 18, bos);
+
+        byte[] bitmapData = bos.toByteArray();
+
+        try {
+            //Compressed image is written in same previous image file
+            FileOutputStream fos = new FileOutputStream(mCurrentPhotoPath);
+            fos.write(bitmapData);
+            fos.flush();
+            fos.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG,"Exception while converting bitmap to file, "+e.toString());
+        }
 
     }
 

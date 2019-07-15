@@ -171,7 +171,6 @@ public class TodoGetDetailsPage extends AppCompatActivity {
 
                 Long currentUnix = System.currentTimeMillis()/1000;
 
-
                 TodoTable aTodo = new TodoTable(mSimpleTodo.getId(), policeId, areaId, mSimpleTodo.getTitle(), type, String.valueOf(mUnixFrom),
                         String.valueOf(mUnixTo), String.valueOf(currentUnix), mCurrentPhotoPath,des,
                         String.valueOf(mMyLocation.latitude), String.valueOf(mMyLocation.longitude));

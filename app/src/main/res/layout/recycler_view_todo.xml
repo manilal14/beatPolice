@@ -40,6 +40,17 @@
                     android:fontFamily="@font/montserrat_regular"
                     android:text="Description will be here."/>
 
+                <TextView
+                    android:id="@+id/navigate"
+                    android:padding="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/gotham_medium_regular"
+                    android:text="Navigate"/>
+
             </LinearLayout>
             <ImageView
                 android:id="@+id/arrow"

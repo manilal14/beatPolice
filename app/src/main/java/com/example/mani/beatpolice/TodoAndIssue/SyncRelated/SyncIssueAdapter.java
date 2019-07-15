@@ -49,6 +49,8 @@ import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctu
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedDate;
 import static com.example.mani.beatpolice.CommonPackage.CommanVariablesAndFunctuions.getFormattedTime;
 import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_ALLOT_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_DIST_ID;
+import static com.example.mani.beatpolice.LoginRelated.LoginSessionManager.KEY_POLICE_ID;
 
 public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.IssueViewHolder> {
 
@@ -59,12 +61,20 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
     private ProgressDialog mProgressDialog;
     private MyInterface listener;
 
+    private LoginSessionManager mSession;
+    String mPid, mDisId;
+
     public SyncIssueAdapter(Context mCtx, List<IssueTable> mIssueTableList,MyInterface listener) {
         this.mCtx = mCtx;
         this.mIssueTableList = mIssueTableList;
         mProgressDialog = new ProgressDialog(mCtx);
         mProgressDialog.setMessage("Please wait...");
         mProgressDialog.setCancelable(false);
+
+        mSession = new LoginSessionManager(mCtx);
+
+        mPid   = mSession.getPoliceDetailsFromPref().get(KEY_POLICE_ID);
+        mDisId = mSession.getAllotmentDetails().get(KEY_DIST_ID);
 
         this.listener = listener;
     }
@@ -166,7 +176,7 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
     private void syncIssueWithoutImage(final IssueTable issue) {
 
         mProgressDialog.show();
-        Log.e(TAG,"called : syncTodo");
+        Log.e(TAG,"called : syncIssueWithoutImage");
 
         final String SYNC_URL = BASE_URL + "syncIssueWithoutImage1.php";
 
@@ -215,6 +225,20 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
 
                 params.put("lat",issue.getLocationLatitude());
                 params.put("lon",issue.getLocationLongitude());
+
+                params.put("p_id",allotId);
+                params.put("a_id",issue.getAId());
+                params.put("issue_id",issue.getIssueType());
+                params.put("des",issue.getDes());
+                params.put("from",issue.getFrom());
+                params.put("to",issue.getTo());
+                params.put("reported_at_time",issue.getReportedAtTime());
+                params.put("reported_at_location",issue.getReportedAtLocation());
+
+                params.put("district_id",mDisId);
+                params.put("p_id",mPid);
+
+
 
                 return params;
             }
@@ -265,6 +289,9 @@ public class SyncIssueAdapter extends RecyclerView.Adapter<SyncIssueAdapter.Issu
                     .addParameter("des",issue.getDes())
                     .addParameter("lat",issue.getLocationLatitude())
                     .addParameter("lon",issue.getLocationLongitude())
+
+                    .addParameter("district_id",mDisId)
+                    .addParameter("p_id",mPid)
 
                     .setNotificationConfig(new UploadNotificationConfig())
                     .setMaxRetries(2)
